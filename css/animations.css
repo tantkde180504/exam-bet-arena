@@ -1,0 +1,145 @@
+/* ==========================================================================
+   ANIMATIONS & KEYFRAMES FOR EXAM SHOWDOWN
+   ========================================================================== */
+
+/* Neon Pulsing */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(0.96);
+  }
+}
+
+.pulse {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* VS Spinner Slow */
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Stamp Verified Animation */
+@keyframes stampIn {
+  0% {
+    opacity: 0;
+    transform: scale(3) rotate(-35deg);
+  }
+  60% {
+    opacity: 0.9;
+    transform: scale(0.9) rotate(-12deg);
+  }
+  80% {
+    transform: scale(1.05) rotate(-16deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-15deg);
+  }
+}
+
+.pulse-stamp {
+  animation: stampIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Modal Animation */
+@keyframes modalScale {
+  0% {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Slide Up Fade */
+@keyframes slideUpFade {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Trophy Victory Bounce */
+@keyframes bounceTrophy {
+  0% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  100% {
+    transform: translateY(-12px) rotate(5deg);
+  }
+}
+
+/* Toast Slide In */
+@keyframes toastSlideIn {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Glowing Border Sweep */
+@keyframes borderGlow {
+  0%, 100% {
+    border-color: rgba(0, 242, 254, 0.4);
+  }
+  50% {
+    border-color: rgba(255, 42, 133, 0.4);
+  }
+}
+
+/* Shaking Effect for Penalty / Loss */
+@keyframes shakePenalty {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.shake {
+  animation: shakePenalty 0.4s ease-in-out;
+}
+
+/* Floating Particles */
+.floating-sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #00f2fe;
+  box-shadow: 0 0 10px #00f2fe;
+  pointer-events: none;
+  animation: floatSpark 4s infinite ease-in-out;
+}
+
+@keyframes floatSpark {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-120px) scale(0);
+    opacity: 0;
+  }
+}

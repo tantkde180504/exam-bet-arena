@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KÈO THI CỬ - Đại Chiến Điểm Số & Số Phận | Exam Bet Arena</title>
+  <meta name="description" content="Nền tảng chốt kèo thi cử, tỉ số điểm thi và số phận Đậu/Rớt đỉnh cao cho 2 người bạn. Tạo biên bản danh dự, xuất ảnh bằng chứng và phân định thắng thua tự động!">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- App Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body class="theme-cyberpunk">
+
+  <!-- Background Ambience & Grid -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="particles-container" id="particlesContainer"></div>
+  
+  <!-- Canvas Confetti -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <i class="fa-solid fa-bolt-lightning"></i>
+        </div>
+        <div class="logo-text">
+          <span class="logo-sub">EXAM SHOWDOWN 2026</span>
+          <h1 class="logo-title">KÈO THI CỬ <span class="badge-live">LIVE ARENA</span></h1>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="soundToggleBtn" class="btn-icon" title="Bật/Tắt Âm Thanh" aria-label="Bật hoặc tắt âm thanh">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+        <button id="quickHelpBtn" class="btn-glass btn-sm" title="Hướng dẫn sử dụng">
+          <i class="fa-solid fa-circle-question"></i> Hướng Dẫn
+        </button>
+        <button id="newBetTopBtn" class="btn-neon-cyan btn-sm">
+          <i class="fa-solid fa-plus"></i> Tạo Kèo Mới
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- TAB SWITCHER / STATUS BAR -->
+    <nav class="arena-tabs">
+      <button class="tab-btn active" data-tab="bet-view" id="tabBetView">
+        <i class="fa-solid fa-handshake-angle"></i> <span>Giao Kèo Đấu Trường</span>
+      </button>
+      <button class="tab-btn" data-tab="contract-view" id="tabContractView">
+        <i class="fa-solid fa-file-signature"></i> <span>Biên Bản Chốt Kèo</span>
+      </button>
+      <button class="tab-btn" data-tab="result-view" id="tabResultView">
+        <i class="fa-solid fa-trophy"></i> <span>Mở Bát Kết Quả</span>
+        <span class="tab-badge pulse">Có Điểm</span>
+      </button>
+    </nav>
+
+    <!-- ==============================================
+         VIEW 1: ARENA / BET CREATION & OVERVIEW VIEW
+         ============================================== -->
+    <section id="bet-view" class="tab-content active">
+      
+      <!-- HERO VS BANNER -->
+      <div class="vs-banner">
+        <div class="banner-tag">
+          <i class="fa-solid fa-fire"></i> ĐẠI CHIẾN ĐIỂM SỐ VÀ SỐ PHẬN
+        </div>
+        <h2 class="banner-title" id="displayExamName">KỲ THI QUỐC GIA & ĐẠI HỌC</h2>
+        <p class="banner-subtitle">"Quân tử nhất ngôn - Điểm thi công bố - Kẻ thua chung kèo!"</p>
+      </div>
+
+      <!-- DUEL CARDS ARENA -->
+      <div class="duel-arena">
+        
+        <!-- PLAYER 1 (CYAN TEAM) -->
+        <div class="player-card player-1-card" id="cardP1">
+          <div class="player-glow"></div>
+          <div class="player-header">
+            <span class="player-role-badge cyan">
+              <i class="fa-solid fa-shield-halved"></i> ĐẤU THỦ 1
+            </span>
+            <button class="edit-player-btn" onclick="openEditModal(1)" title="Chỉnh sửa thông tin">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+          </div>
+
+          <div class="player-avatar-wrapper">
+            <div class="avatar-ring cyan-ring">
+              <div class="avatar-img" id="p1AvatarDisplay">🎓</div>
+            </div>
+            <div class="avatar-title" id="p1TitleDisplay">Học Bá Bất Diệt</div>
+          </div>
+
+          <h3 class="player-name" id="p1NameDisplay">Nguyễn Văn A</h3>
+          <p class="player-quote" id="p1QuoteDisplay">"Tầm này 9+ trong tầm tay, bạn tuổi gì mà so!"</p>
+
+          <!-- Player 1 Betting Targets -->
+          <div class="player-bet-stats">
+            <div class="stat-box">
+              <span class="stat-label">Dự Đoán Số Phận</span>
+              <div class="stat-value fate-badge" id="p1FateBadge">
+                <i class="fa-solid fa-circle-check"></i> ĐẬU CHẮC
+              </div>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Mục Tiêu Điểm Số</span>
+              <div class="stat-value score-val cyan-text" id="p1TargetScoreDisplay">9.00 đ</div>
+            </div>
+          </div>
+
+          <div class="player-footer">
+            <span class="sbd-tag"><i class="fa-solid fa-id-card"></i> SBD: <b id="p1SbdDisplay">2026-001</b></span>
+          </div>
+        </div>
+
+        <!-- VS CENTER BADGE & SCORE COMPARISON GAUGE -->
+        <div class="vs-center-col">
+          <div class="vs-symbol-container">
+            <div class="vs-ring-glow"></div>
+            <div class="vs-symbol">
+              <span>V</span><span>S</span>
+            </div>
+          </div>
+
+          <div class="handicap-box" id="handicapDisplayBox">
+            <div class="handicap-title"><i class="fa-solid fa-scale-balanced"></i> KÈO ĐIỂM SỐ</div>
+            <div class="handicap-text" id="handicapTextDisplay">Kèo Đồng Banh (0 - 0)</div>
+            <div class="over-under-tag" id="overUnderDisplay">Tài/Xỉu: 16.5 điểm</div>
+          </div>
+
+          <!-- Score Balance Meter -->
+          <div class="balance-gauge-wrapper">
+            <div class="gauge-labels">
+              <span class="cyan-text" id="gaugeP1Name">Nguyễn Văn A</span>
+              <span class="gauge-center-text">TỶ LỆ KÈO</span>
+              <span class="pink-text" id="gaugeP2Name">Trần Thị B</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill-p1" id="gaugeBarP1" style="width: 50%;"></div>
+              <div class="gauge-fill-p2" id="gaugeBarP2" style="width: 50%;"></div>
+            </div>
+            <div class="gauge-numbers">
+              <span id="gaugeP1Percent">50%</span>
+              <span class="gauge-mid-marker"><i class="fa-solid fa-caret-up"></i> Cân Kèo</span>
+              <span id="gaugeP2Percent">50%</span>
+            </div>
+          </div>
+
+          <button id="quickEditBetBtn" class="btn-glass btn-glow">
+            <i class="fa-solid fa-sliders"></i> Chỉnh Kèo Nhanh
+          </button>
+        </div>
+
+        <!-- PLAYER 2 (MAGENTA/CRIMSON TEAM) -->
+        <div class="player-card player-2-card" id="cardP2">
+          <div class="player-glow"></div>
+          <div class="player-header">
+            <span class="player-role-badge magenta">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> ĐẤU THỦ 2
+            </span>
+            <button class="edit-player-btn" onclick="openEditModal(2)" title="Chỉnh sửa thông tin">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+          </div>
+
+          <div class="player-avatar-wrapper">
+            <div class="avatar-ring magenta-ring">
+              <div class="avatar-img" id="p2AvatarDisplay">🚀</div>
+            </div>
+            <div class="avatar-title" id="p2TitleDisplay">Thánh Khoanh Lụi</div>
+          </div>
+
+          <h3 class="player-name" id="p2NameDisplay">Trần Thị B</h3>
+          <p class="player-quote" id="p2QuoteDisplay">"Khoanh C hết vẫn đủ điểm đè bẹp bạn yêu nhé!"</p>
+
+          <!-- Player 2 Betting Targets -->
+          <div class="player-bet-stats">
+            <div class="stat-box">
+              <span class="stat-label">Dự Đoán Số Phận</span>
+              <div class="stat-value fate-badge" id="p2FateBadge">
+                <i class="fa-solid fa-circle-check"></i> ĐẬU CHẮC
+              </div>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Mục Tiêu Điểm Số</span>
+              <div class="stat-value score-val magenta-text" id="p2TargetScoreDisplay">8.75 đ</div>
+            </div>
+          </div>
+
+          <div class="player-footer">
+            <span class="sbd-tag"><i class="fa-solid fa-id-card"></i> SBD: <b id="p2SbdDisplay">2026-002</b></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STAKES & PENALTY SHOWCASE -->
+      <div class="stakes-card">
+        <div class="stakes-header">
+          <div class="stakes-icon">
+            <i class="fa-solid fa-beer-mug-empty"></i>
+          </div>
+          <div>
+            <span class="section-badge">HÌNH PHẠT & PHẦN THƯỞNG</span>
+            <h3 class="stakes-title">Treo Thưởng Chung Kèo</h3>
+          </div>
+        </div>
+        <div class="stakes-body">
+          <div class="stakes-highlight" id="stakesDisplay">
+            <i class="fa-solid fa-utensils"></i> 1 Chầu Buffet Nướng Lẩu Full Topping + 1 Ly Trà Sữa Size L
+          </div>
+          <p class="stakes-note">
+            <i class="fa-solid fa-triangle-exclamation"></i> 
+            Kẻ thua cuộc phải thực hiện trong vòng <b>48 giờ</b> kể từ khi trường / bộ công bố điểm chính thức!
+          </p>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="arena-action-bar">
+        <button id="viewContractBtn" class="btn-neon-gold btn-lg">
+          <i class="fa-solid fa-stamp"></i> Xem & Xuất Biên Bản Kèo
+        </button>
+        <button id="shareLinkBtn" class="btn-neon-cyan btn-lg">
+          <i class="fa-solid fa-share-nodes"></i> Sao Chép Link Chia Sẻ
+        </button>
+        <button id="openResultBtn" class="btn-neon-pink btn-lg">
+          <i class="fa-solid fa-bullhorn"></i> Nhập Điểm Phân Xử
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ==============================================
+         VIEW 2: HONOR CONTRACT & IMAGE EXPORT VIEW
+         ============================================== -->
+    <section id="contract-view" class="tab-content">
+      
+      <div class="contract-wrapper">
+        <div class="contract-toolbar">
+          <div class="toolbar-title">
+            <i class="fa-solid fa-certificate"></i> BIÊN BẢN GIAO KÈO BẤT TỬ
+          </div>
+          <div class="toolbar-btns">
+            <button id="exportImageBtn" class="btn-neon-gold btn-sm">
+              <i class="fa-solid fa-camera"></i> Tải Ảnh Chứng Nhận (PNG)
+            </button>
+            <button id="copyContractTextBtn" class="btn-glass btn-sm">
+              <i class="fa-solid fa-copy"></i> Copy Nội Dung
+            </button>
+          </div>
+        </div>
+
+        <!-- RENDERABLE CERTIFICATE CONTAINER (Will be exported to Image) -->
+        <div class="contract-paper" id="contractPaper">
+          <div class="contract-border-inner">
+            
+            <!-- Watermark / Stamp -->
+            <div class="stamp-verified pulse-stamp" id="stampVerified">
+              <div class="stamp-circle">
+                <span class="stamp-top">KÈO CHÍNH THỨC</span>
+                <span class="stamp-mid">ĐÃ CHỐT</span>
+                <span class="stamp-bot">CẤM QUỴT KÈO</span>
+              </div>
+            </div>
+
+            <div class="contract-header">
+              <div class="contract-emblem">⚖️</div>
+              <h2 class="contract-main-title">CỘNG HÒA XÃ HỘI CHỐT KÈO VIỆT NAM</h2>
+              <p class="contract-motto">Độc Lập - Tự Do - Thua Là Chung</p>
+              <div class="contract-divider">✦ ✦ ✦</div>
+              <h3 class="contract-doc-title">BIÊN BẢN GIAO KÈO ĐIỂM THI VÀ SỐ PHẬN</h3>
+              <p class="contract-date-tag">Lập lúc: <span id="contractDateDisplay">20/08/2026 - 21:30</span></p>
+            </div>
+
+            <div class="contract-content">
+              <p class="contract-clause">
+                Hôm nay, trước sự chứng giám của bạn bè bốn phương và hội đồng bàn tròn, hai bên gồm có:
+              </p>
+
+              <div class="contract-parties-grid">
+                <div class="party-box party-1">
+                  <div class="party-tag">BÊN A (Chủ Kèo 1)</div>
+                  <div class="party-name" id="cParty1Name">Nguyễn Văn A</div>
+                  <div class="party-detail">Danh hiệu: <b id="cParty1Title">Học Bá Bất Diệt</b></div>
+                  <div class="party-detail">Dự đoán kết quả: <span class="tag-pass" id="cParty1Fate">ĐẬU</span></div>
+                  <div class="party-detail">Chỉ tiêu điểm: <b id="cParty1Score">9.00 đ</b></div>
+                  <div class="party-quote">" <i id="cParty1Quote">Tầm này 9+ trong tầm tay!</i> "</div>
+                </div>
+
+                <div class="party-vs-badge">VS</div>
+
+                <div class="party-box party-2">
+                  <div class="party-tag">BÊN B (Chủ Kèo 2)</div>
+                  <div class="party-name" id="cParty2Name">Trần Thị B</div>
+                  <div class="party-detail">Danh hiệu: <b id="cParty2Title">Thánh Khoanh Lụi</b></div>
+                  <div class="party-detail">Dự đoán kết quả: <span class="tag-pass" id="cParty2Fate">ĐẬU</span></div>
+                  <div class="party-detail">Chỉ tiêu điểm: <b id="cParty2Score">8.75 đ</b></div>
+                  <div class="party-quote">" <i id="cParty2Quote">Khoanh C hết vẫn đè bẹp bạn yêu!</i> "</div>
+                </div>
+              </div>
+
+              <div class="contract-terms-box">
+                <h4><i class="fa-solid fa-scroll"></i> ĐIỀU KHOẢN VÀ THỂ LỆ GIAO KÈO:</h4>
+                <ol>
+                  <li><b>Kỳ thi áp dụng:</b> <span id="cExamName">Kỳ thi Tốt Nghiệp & Đại Học 2026</span>.</li>
+                  <li><b>Kèo Chấp Điểm:</b> <span id="cHandicapInfo">Kèo Đồng Banh (Không ai chấp ai)</span>.</li>
+                  <li><b>Kèo Tài / Xỉu:</b> Tổng điểm 2 bên dự đoán mốc <span id="cOverUnderInfo">16.5 điểm</span>.</li>
+                  <li><b>Điều khoản Đậu / Rớt:</b> Người nào có kết quả trái với dự đoán hoặc thấp điểm hơn (sau khi tính chấp) được xác định là BÊN THUA CUỘC.</li>
+                  <li><b>Hình phạt & Nghĩa vụ:</b> Bên thua cuộc phải vô điều kiện thực hiện: <br>
+                    <span class="penalty-highlight" id="cPenaltyText">1 Chầu Buffet Nướng Lẩu Full Topping + 1 Ly Trà Sữa Size L</span>.
+                  </li>
+                  <li><b>Hiệu lực cam kết:</b> Biên bản này có giá trị vĩnh viễn trên không gian mạng, cấm mọi hành vi hủy kèo, block Facebook, trốn nợ hoặc viện cớ đau bụng khi có điểm!</li>
+                </ol>
+              </div>
+
+              <div class="contract-signatures">
+                <div class="sign-block">
+                  <span class="sign-title">ĐẠI DIỆN BÊN A</span>
+                  <div class="sign-space">
+                    <span class="digital-sign-font" id="cSignA">Nguyen Van A</span>
+                  </div>
+                  <span class="sign-status"><i class="fa-solid fa-circle-check"></i> Đã Ký Điện Tử</span>
+                </div>
+                <div class="sign-block">
+                  <span class="sign-title">ĐẠI DIỆN BÊN B</span>
+                  <div class="sign-space">
+                    <span class="digital-sign-font" id="cSignB">Tran Thi B</span>
+                  </div>
+                  <span class="sign-status"><i class="fa-solid fa-circle-check"></i> Đã Ký Điện Tử</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="contract-footer">
+              <span>MÃ KÈO: <b id="contractHashTag">#KEO-THICU-2026-X99</b></span>
+              <span>CHỨNG THỰC BỞI EXAM BET ARENA</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==============================================
+         VIEW 3: LIVE RESULT REVEAL / MỞ BÁT KẾT QUẢ
+         ============================================== -->
+    <section id="result-view" class="tab-content">
+      <div class="result-container">
+        
+        <div class="result-banner">
+          <div class="result-tag"><i class="fa-solid fa-scale-unbalanced-flip"></i> PHÂN ĐỊNH THẮNG THUA</div>
+          <h2>HỘI ĐỒNG MỞ BÁT ĐIỂM THI</h2>
+          <p>Nhập điểm thi chính thức để hệ thống tự động phân xử kèo Đậu/Rớt và Tỉ số!</p>
+        </div>
+
+        <div class="result-input-arena">
+          
+          <!-- Input P1 Real Result -->
+          <div class="result-input-card card-p1-result">
+            <div class="res-card-header">
+              <span class="avatar-mini" id="resP1Avatar">🎓</span>
+              <div>
+                <h4 id="resP1Name">Nguyễn Văn A</h4>
+                <span class="target-hint">Kèo chốt: <b id="resP1TargetHint">Đậu (9.0 đ)</b></span>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label><i class="fa-solid fa-graduation-cap"></i> Kết Quả Thi Thực Tế:</label>
+              <div class="radio-pill-group">
+                <label class="pill-option">
+                  <input type="radio" name="resP1Fate" value="PASS" checked>
+                  <span class="pill-text pass"><i class="fa-solid fa-check"></i> ĐẬU RỒI</span>
+                </label>
+                <label class="pill-option">
+                  <input type="radio" name="resP1Fate" value="FAIL">
+                  <span class="pill-text fail"><i class="fa-solid fa-xmark"></i> RỚT RỒI</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="resP1ScoreInput"><i class="fa-solid fa-calculator"></i> Điểm Thi Thật (0 - 10):</label>
+              <div class="number-stepper">
+                <button type="button" class="step-btn" onclick="stepScore('resP1ScoreInput', -0.25)">-</button>
+                <input type="number" id="resP1ScoreInput" min="0" max="10" step="0.05" value="9.25">
+                <button type="button" class="step-btn" onclick="stepScore('resP1ScoreInput', +0.25)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="res-vs-divider">
+            <i class="fa-solid fa-bolt-lightning"></i>
+          </div>
+
+          <!-- Input P2 Real Result -->
+          <div class="result-input-card card-p2-result">
+            <div class="res-card-header">
+              <span class="avatar-mini" id="resP2Avatar">🚀</span>
+              <div>
+                <h4 id="resP2Name">Trần Thị B</h4>
+                <span class="target-hint">Kèo chốt: <b id="resP2TargetHint">Đậu (8.75 đ)</b></span>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label><i class="fa-solid fa-graduation-cap"></i> Kết Quả Thi Thực Tế:</label>
+              <div class="radio-pill-group">
+                <label class="pill-option">
+                  <input type="radio" name="resP2Fate" value="PASS" checked>
+                  <span class="pill-text pass"><i class="fa-solid fa-check"></i> ĐẬU RỒI</span>
+                </label>
+                <label class="pill-option">
+                  <input type="radio" name="resP2Fate" value="FAIL">
+                  <span class="pill-text fail"><i class="fa-solid fa-xmark"></i> RỚT RỒI</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="resP2ScoreInput"><i class="fa-solid fa-calculator"></i> Điểm Thi Thật (0 - 10):</label>
+              <div class="number-stepper">
+                <button type="button" class="step-btn" onclick="stepScore('resP2ScoreInput', -0.25)">-</button>
+                <input type="number" id="resP2ScoreInput" min="0" max="10" step="0.05" value="8.50">
+                <button type="button" class="step-btn" onclick="stepScore('resP2ScoreInput', +0.25)">+</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="result-trigger-center">
+          <button id="calculateResultBtn" class="btn-verdict">
+            <i class="fa-solid fa-gavel"></i> MỞ BÁT & PHÁN QUYẾT KÈO!
+          </button>
+        </div>
+
+        <!-- OUTCOME REVEAL DASHBOARD (Hidden until calculated) -->
+        <div class="outcome-dashboard" id="outcomeDashboard" style="display: none;">
+          
+          <div class="outcome-verdict-banner" id="verdictBanner">
+            <div class="verdict-trophy"><i class="fa-solid fa-crown"></i></div>
+            <h3 class="verdict-headline" id="verdictHeadline">NGUYỄN VĂN A THẮNG TOÀN DIỆN!</h3>
+            <p class="verdict-sub" id="verdictSub">Trần Thị B thua tâm phục khẩu phục và phải chung kèo lập tức!</p>
+          </div>
+
+          <div class="outcome-breakdown-grid">
+            
+            <div class="breakdown-card">
+              <div class="breakdown-icon"><i class="fa-solid fa-crosshairs"></i></div>
+              <div class="breakdown-info">
+                <h4>KÈO ĐẬU / RỚT</h4>
+                <p id="fateResultSummary">Cả 2 đều ĐẬU thành công rực rỡ!</p>
+              </div>
+            </div>
+
+            <div class="breakdown-card">
+              <div class="breakdown-icon"><i class="fa-solid fa-chart-simple"></i></div>
+              <div class="breakdown-info">
+                <h4>KÈO TỈ SỐ & CHẤP</h4>
+                <p id="scoreResultSummary">Điểm thực tế: 9.25 vs 8.50 (Cách biệt 0.75đ)</p>
+              </div>
+            </div>
+
+            <div class="breakdown-card">
+              <div class="breakdown-icon"><i class="fa-solid fa-chart-pie"></i></div>
+              <div class="breakdown-info">
+                <h4>KÈO TÀI / XỈU TỔNG ĐIỂM</h4>
+                <p id="overUnderResultSummary">Tổng điểm: 17.75đ -> NỔ TÀI (> 16.5)</p>
+              </div>
+            </div>
+
+            <div class="breakdown-card penalty-claim">
+              <div class="breakdown-icon"><i class="fa-solid fa-bell-concierge"></i></div>
+              <div class="breakdown-info">
+                <h4>NGHĨA VỤ TRẢ KÈO</h4>
+                <p id="penaltyClaimSummary"><b class="loser-name">Trần Thị B</b> phải bao: <b>1 Chầu Buffet Nướng Lẩu Full Topping</b></p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="outcome-share-row">
+            <button id="exportVictoryCardBtn" class="btn-neon-gold">
+              <i class="fa-solid fa-trophy"></i> Xuất Ảnh Kết Quả Thắng Thua
+            </button>
+            <button id="replaySoundBtn" class="btn-glass">
+              <i class="fa-solid fa-volume-high"></i> Bật Lại Tiếng Pháo Hoa
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==============================================
+       MODALS
+       ============================================== -->
+
+  <!-- MODAL: EDIT BET & MATCH SETTINGS -->
+  <div class="modal-overlay" id="betModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-gear"></i> Thiết Lập Kèo Đấu Chi Tiết</h3>
+        <button class="modal-close" onclick="closeModal('betModalOverlay')">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <form id="betConfigForm">
+          
+          <div class="form-section-title"><i class="fa-solid fa-book-open"></i> Thông Tin Kỳ Thi</div>
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="inputExamName">Tên Kỳ Thi / Môn Thi:</label>
+              <input type="text" id="inputExamName" value="Kỳ Thi Tốt Nghiệp & Đại Học 2026" placeholder="Ví dụ: Thi Đại Học, IELTS, Toán Cuối Kỳ...">
+            </div>
+            <div class="form-group flex-1">
+              <label for="inputExamType">Thang Điểm:</label>
+              <select id="inputExamType">
+                <option value="10" selected>Thang điểm 10</option>
+                <option value="100">Thang điểm 100</option>
+                <option value="9">Thang điểm 9.0 (IELTS)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-section-title"><i class="fa-solid fa-users"></i> Thông Tin 2 Đấu Thủ</div>
+          
+          <!-- Player 1 Config -->
+          <div class="player-config-box box-p1">
+            <span class="box-title cyan-text"><i class="fa-solid fa-shield"></i> Đấu Thủ 1 (Bên A)</span>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tên / Biệt Danh:</label>
+                <input type="text" id="inputP1Name" value="Nguyễn Văn A">
+              </div>
+              <div class="form-group">
+                <label>Avatar / Biểu Tượng:</label>
+                <div class="avatar-select-chips" id="p1AvatarChips">
+                  <span class="chip active" data-val="🎓">🎓</span>
+                  <span class="chip" data-val="😎">😎</span>
+                  <span class="chip" data-val="🔥">🔥</span>
+                  <span class="chip" data-val="👑">👑</span>
+                  <span class="chip" data-val="🧙‍♂️">🧙‍♂️</span>
+                  <span class="chip" data-val="🐱">🐱</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Danh Hiệu Gáy:</label>
+                <input type="text" id="inputP1Title" value="Học Bá Bất Diệt">
+              </div>
+              <div class="form-group">
+                <label>SBD / Mã Thi:</label>
+                <input type="text" id="inputP1Sbd" value="2026-001">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Dự Đoán Đậu / Rớt:</label>
+                <select id="inputP1Fate">
+                  <option value="PASS" selected>ĐẬU CHẮC (Pass)</option>
+                  <option value="FAIL">RỚT NỮA (Fail)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mục Tiêu Điểm Số:</label>
+                <input type="number" id="inputP1TargetScore" step="0.1" value="9.0" min="0" max="10">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Câu Nói Trước Giờ G:</label>
+              <input type="text" id="inputP1Quote" value="Tầm này 9+ trong tầm tay, bạn tuổi gì mà so!">
+            </div>
+          </div>
+
+          <!-- Player 2 Config -->
+          <div class="player-config-box box-p2">
+            <span class="box-title magenta-text"><i class="fa-solid fa-wand-magic-sparkles"></i> Đấu Thủ 2 (Bên B)</span>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tên / Biệt Danh:</label>
+                <input type="text" id="inputP2Name" value="Trần Thị B">
+              </div>
+              <div class="form-group">
+                <label>Avatar / Biểu Tượng:</label>
+                <div class="avatar-select-chips" id="p2AvatarChips">
+                  <span class="chip" data-val="🎓">🎓</span>
+                  <span class="chip" data-val="😎">😎</span>
+                  <span class="chip" data-val="🔥">🔥</span>
+                  <span class="chip active" data-val="🚀">🚀</span>
+                  <span class="chip" data-val="🦄">🦄</span>
+                  <span class="chip" data-val="🦊">🦊</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Danh Hiệu Gáy:</label>
+                <input type="text" id="inputP2Title" value="Thánh Khoanh Lụi">
+              </div>
+              <div class="form-group">
+                <label>SBD / Mã Thi:</label>
+                <input type="text" id="inputP2Sbd" value="2026-002">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Dự Đoán Đậu / Rớt:</label>
+                <select id="inputP2Fate">
+                  <option value="PASS" selected>ĐẬU CHẮC (Pass)</option>
+                  <option value="FAIL">RỚT NỮA (Fail)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mục Tiêu Điểm Số:</label>
+                <input type="number" id="inputP2TargetScore" step="0.1" value="8.75" min="0" max="10">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Câu Nói Trước Giờ G:</label>
+              <input type="text" id="inputP2Quote" value="Khoanh C hết vẫn đủ điểm đè bẹp bạn yêu nhé!">
+            </div>
+          </div>
+
+          <div class="form-section-title"><i class="fa-solid fa-scale-balanced"></i> Kèo Tỉ Số, Chấp Điểm & Tài Xỉu</div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inputHandicapType">Kèo Chấp Điểm (Handicap):</label>
+              <select id="inputHandicapType">
+                <option value="0" selected>Đồng Banh (Không chấp)</option>
+                <option value="P1_05">Bạn A chấp Bạn B 0.5 điểm</option>
+                <option value="P1_10">Bạn A chấp Bạn B 1.0 điểm</option>
+                <option value="P1_15">Bạn A chấp Bạn B 1.5 điểm</option>
+                <option value="P2_05">Bạn B chấp Bạn A 0.5 điểm</option>
+                <option value="P2_10">Bạn B chấp Bạn A 1.0 điểm</option>
+                <option value="P2_15">Bạn B chấp Bạn A 1.5 điểm</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="inputOverUnder">Kèo Tài / Xỉu Tổng Điểm:</label>
+              <input type="number" id="inputOverUnder" step="0.5" value="16.5">
+            </div>
+          </div>
+
+          <div class="form-section-title"><i class="fa-solid fa-gift"></i> Hình Phạt / Phần Thưởng</div>
+          
+          <div class="form-group">
+            <label>Chọn Nhanh Kèo Kinh Điển:</label>
+            <div class="penalty-chips" id="penaltyChips">
+              <button type="button" class="p-chip" data-text="1 Chầu Buffet Nướng Lẩu Full Topping + Trà Sữa">🍲 Buffet Nướng Lẩu + Trà Sữa</button>
+              <button type="button" class="p-chip" data-text="1 Tháng Trà Sữa 30 Ly Full Topping">🧋 1 Tháng Trà Sữa</button>
+              <button type="button" class="p-chip" data-text="Cạo Trọc Đầu hoặc Nhuộm Tóc Màu Neon">💈 Cạo Trọc / Nhuộm Neon</button>
+              <button type="button" class="p-chip" data-text="Rửa Chén & Quét Dọn Nhà 1 Tháng">🧹 Rửa Chén 1 Tháng</button>
+              <button type="button" class="p-chip" data-text="Mặc Váy Đi Bộ 1 Vòng Phố Đi Bộ & Check-in">👗 Mặc Váy Đi Dạo Phố</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="inputCustomPenalty">Nội Dung Hình Phạt Cụ Thể:</label>
+            <textarea id="inputCustomPenalty" rows="2">1 Chầu Buffet Nướng Lẩu Full Topping + 1 Ly Trà Sữa Size L</textarea>
+          </div>
+
+        </form>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-glass" onclick="closeModal('betModalOverlay')">Hủy</button>
+        <button type="button" class="btn-neon-cyan" id="saveBetConfigBtn">
+          <i class="fa-solid fa-check"></i> Lưu & Cập Nhật Kèo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HELP / GUIDE -->
+  <div class="modal-overlay" id="helpModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-circle-question"></i> Hướng Dẫn Sử Dụng & Đưa Lên GitHub Pages</h3>
+        <button class="modal-close" onclick="closeModal('helpModalOverlay')">&times;</button>
+      </div>
+      <div class="modal-body help-body">
+        <h4><i class="fa-solid fa-rocket"></i> Cách Sử Dụng Web Lên Kèo:</h4>
+        <ol>
+          <li><b>Bước 1:</b> Nhấn <b>"Tạo Kèo Mới"</b> hoặc <b>"Chỉnh Kèo Nhanh"</b> để nhập thông tin 2 bạn bè, chọn kèo Đậu/Rớt, mốc điểm và phần thưởng.</li>
+          <li><b>Bước 2:</b> Nhấn <b>"Sao Chép Link Chia Sẻ"</b> để gửi cho bạn bè. Mọi thông tin kèo đã được mã hóa vào đường link URL.</li>
+          <li><b>Bước 3:</b> Nhấn <b>"Tải Ảnh Chứng Nhận"</b> để xuất file ảnh PNG biên bản đóng mộc đỏ đăng lên Facebook/Zalo.</li>
+          <li><b>Bước 4:</b> Khi có điểm thi thực tế, bấm tab <b>"Mở Bát Kết Quả"</b>, nhập điểm để hệ thống tính toán thắng thua và kích hoạt pháo hoa!</li>
+        </ol>
+
+        <h4><i class="fa-brands fa-github"></i> Cách Host Miễn Phí Trên GitHub Pages:</h4>
+        <ol>
+          <li>Tạo 1 repository mới trên GitHub (Ví dụ: <code>keo-thi-cu</code>).</li>
+          <li>Đẩy toàn bộ các file trong thư mục này lên branch <code>main</code>.</li>
+          <li>Vào <b>Settings -> Pages</b>, tại mục <b>Branch</b> chọn <code>main</code> rồi nhấn <b>Save</b>.</li>
+          <li>Trang web của bạn sẽ hoạt động ngay tại đường dẫn: <code>https://tên-github.github.io/keo-thi-cu/</code>!</li>
+        </ol>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-neon-cyan" onclick="closeModal('helpModalOverlay')">Đã Hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- SCRIPTS -->
+  <script src="js/audio.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/canvas-export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
