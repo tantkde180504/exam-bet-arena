@@ -34,7 +34,7 @@ let appState = {
       type: "ODD",
       targetCand: null,
       predictedScore: null,
-      stake: "50.000 VNĐ Tiền Mặt",
+      stake: "10.000 VNĐ Tiền Mặt",
       time: "20/08 - 21:15"
     },
     {
