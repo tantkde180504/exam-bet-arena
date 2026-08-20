@@ -1,13 +1,12 @@
 /**
  * Canvas Image Exporter
- * Generates crisp 1200x800 PNG Certificate & Victory Result Card for easy sharing
- * Updated with Kèo Chẵn / Kèo Lẻ & Kèo Tỉ Số
+ * Generates crisp 1200x800 PNG Certificate & Settlement Ledger for easy sharing
  */
 
 class ProofCardExporter {
   
-  // 1. Export Honor Contract Certificate
-  static exportContract(betState) {
+  // 1. Export Sàn Kèo Certificate with Participants
+  static exportContract(state) {
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
     canvas.height = 800;
@@ -56,132 +55,127 @@ class ProofCardExporter {
 
     // Header
     ctx.textAlign = 'center';
-    
     ctx.fillStyle = '#ffd200';
     ctx.font = 'bold 22px "Chakra Petch", sans-serif';
-    ctx.fillText('CỘNG HÒA XÃ HỘI CHỐT KÈO VIỆT NAM', 600, 85);
+    ctx.fillText('CỘNG HÒA XÃ HỘI CHỐT KÈO HỌC ĐƯỜNG', 600, 80);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '15px "Outfit", sans-serif';
-    ctx.fillText('Độc Lập - Tự Do - Thua Là Chung Kèo', 600, 112);
+    ctx.font = '14px "Outfit", sans-serif';
+    ctx.fillText('Độc Lập - Tự Do - Thua Là Chung Kèo', 600, 105);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 30px "Chakra Petch", sans-serif';
-    ctx.fillText('BIÊN BẢN GIAO KÈO CHẴN / LẺ & TỈ SỐ ĐIỂM THI', 600, 155);
+    ctx.fillText('BIÊN BẢN CHỨNG NHẬN SÀN KÈO THI CỬ', 600, 145);
 
     ctx.fillStyle = '#00f2fe';
-    ctx.font = 'bold 16px "Outfit", sans-serif';
-    ctx.fillText(`KỲ THI: ${betState.examName.toUpperCase()}`, 600, 185);
+    ctx.font = 'bold 15px "Outfit", sans-serif';
+    ctx.fillText(`KỲ THI: ${state.examName.toUpperCase()}`, 600, 175);
 
-    // Duel Cards (Side by Side)
-    // Party 1 (Left)
-    this.drawPartyCard(ctx, 70, 215, 460, 230, {
-      role: 'BÊN A (Chủ Kèo 1)',
-      name: betState.p1.name,
-      avatar: betState.p1.avatar,
-      title: betState.p1.title,
-      score: betState.p1.targetScore,
-      betType: betState.p1.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ',
-      quote: betState.p1.quote,
-      accentColor: '#00f2fe'
-    });
+    // 2 Candidates Banner
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.fillRect(70, 200, 1060, 95);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.strokeRect(70, 200, 1060, 95);
 
-    // VS Circle in middle
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(600, 330, 40, 0, Math.PI * 2);
-    ctx.fillStyle = '#161d36';
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#ffd200';
-    ctx.stroke();
+    // Cand 1 Left
+    ctx.textAlign = 'left';
+    ctx.font = '36px sans-serif';
+    ctx.fillText(state.candidates.c1.avatar, 95, 260);
 
+    ctx.fillStyle = '#00f2fe';
+    ctx.font = 'bold 12px "Chakra Petch", sans-serif';
+    ctx.fillText('THÍ SINH 1', 150, 235);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 18px "Chakra Petch", sans-serif';
+    ctx.fillText(state.candidates.c1.name, 150, 260);
+
+    // Cand 2 Right
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ff2a85';
+    ctx.font = 'bold 12px "Chakra Petch", sans-serif';
+    ctx.fillText('THÍ SINH 2', 1050, 235);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 18px "Chakra Petch", sans-serif';
+    ctx.fillText(state.candidates.c2.name, 1050, 260);
+
+    ctx.font = '36px sans-serif';
+    ctx.fillText(state.candidates.c2.avatar, 1105, 260);
+
+    // VS Center
+    ctx.textAlign = 'center';
     ctx.fillStyle = '#ffd200';
     ctx.font = '900 24px "Chakra Petch", sans-serif';
-    ctx.fillText('VS', 600, 338);
-    ctx.restore();
+    ctx.fillText('VS', 600, 255);
 
-    // Party 2 (Right)
-    this.drawPartyCard(ctx, 670, 215, 460, 230, {
-      role: 'BÊN B (Chủ Kèo 2)',
-      name: betState.p2.name,
-      avatar: betState.p2.avatar,
-      title: betState.p2.title,
-      score: betState.p2.targetScore,
-      betType: betState.p2.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ',
-      quote: betState.p2.quote,
-      accentColor: '#ff2a85'
-    });
-
-    // Terms Box (Lower half)
+    // Bet Slips Ledger Grid (Show up to 8 slips)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.fillRect(70, 465, 1060, 185);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.fillRect(70, 315, 1060, 350);
+    ctx.strokeStyle = '#ffd200';
     ctx.lineWidth = 1;
-    ctx.strokeRect(70, 465, 1060, 185);
+    ctx.strokeRect(70, 315, 1060, 350);
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#ffd200';
     ctx.font = 'bold 16px "Chakra Petch", sans-serif';
-    ctx.fillText('⚖️ ĐIỀU KHOẢN KÈO CHẴN / LẺ & KÈO TỈ SỐ:', 90, 495);
+    ctx.fillText(`📋 DANH SÁCH ANH EM ĐÃ VÀO KÈO (${state.betSlips.length} VÉ):`, 90, 345);
 
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '14px "Outfit", sans-serif';
-    ctx.fillText('• KÈO CHẴN: Thắng khi Cả 2 cùng ĐẬU hoặc Cả 2 cùng RỚT.', 100, 525);
-    ctx.fillText('• KÈO LẺ: Thắng khi Đúng 1 trong 2 người ĐẬU (người kia Rớt).', 100, 550);
-    ctx.fillText(`• KÈO TỈ SỐ: Đoán chuẩn điểm thi (${betState.p1.name}: ${Number(betState.p1.targetScore).toFixed(2)}đ | ${betState.p2.name}: ${Number(betState.p2.targetScore).toFixed(2)}đ)`, 100, 575);
-    
-    // Highlight penalty
-    ctx.fillStyle = '#ff3860';
-    ctx.font = 'bold 15px "Outfit", sans-serif';
-    ctx.fillText(`👉 HÌNH PHẠT CHUNG KÈO: ${betState.penalty}`, 100, 605);
+    const slipsToShow = state.betSlips.slice(0, 8);
+    if (slipsToShow.length === 0) {
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'italic 14px "Outfit", sans-serif';
+      ctx.fillText('Chưa có vé cược nào trên sàn.', 90, 380);
+    } else {
+      slipsToShow.forEach((s, idx) => {
+        const col = idx % 2;
+        const row = Math.floor(idx / 2);
+        const x = 90 + col * 520;
+        const y = 375 + row * 65;
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'italic 12px "Outfit", sans-serif';
-    ctx.fillText('• Cam kết: Biên bản có giá trị vĩnh viễn, cấm hủy kèo, bùng nợ hoặc trốn tránh khi công bố điểm!', 100, 633);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.fillRect(x, y, 500, 52);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeRect(x, y, 500, 52);
 
-    // Signatures
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 12px "Outfit", sans-serif';
-    ctx.fillText('CHỮ KÝ BÊN A', 240, 675);
-    ctx.fillText('CHỮ KÝ BÊN B', 960, 675);
+        let typeText = s.type === 'EVEN' ? 'CỬA CHẴN' : (s.type === 'ODD' ? 'CỬA LẺ' : `TỈ SỐ (${s.targetCand === 1 ? 'A' : 'B'}: ${s.predictedScore}đ)`);
+        let color = s.type === 'EVEN' ? '#00f2fe' : (s.type === 'ODD' ? '#ff2a85' : '#ffd200');
 
-    ctx.fillStyle = '#00f2fe';
-    ctx.font = 'italic 20px cursive';
-    ctx.fillText(betState.p1.name, 240, 705);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px "Outfit", sans-serif';
+        ctx.fillText(s.bettor, x + 12, y + 22);
 
-    ctx.fillStyle = '#ff2a85';
-    ctx.font = 'italic 20px cursive';
-    ctx.fillText(betState.p2.name, 960, 705);
+        ctx.fillStyle = color;
+        ctx.font = 'bold 12px "Chakra Petch", sans-serif';
+        ctx.fillText(`• ${typeText}`, x + 12, y + 42);
 
-    ctx.fillStyle = '#00f5a0';
-    ctx.font = '11px "Outfit", sans-serif';
-    ctx.fillText('✓ ĐÃ XÁC THỰC KÈO', 240, 725);
-    ctx.fillText('✓ ĐÃ XÁC THỰC KÈO', 960, 725);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ff3860';
+        ctx.font = 'bold 12px "Outfit", sans-serif';
+        ctx.fillText(`Cược: ${s.stake}`, x + 488, y + 32);
+        ctx.textAlign = 'left';
+      });
+    }
 
-    // Footer Hash
+    // Stamp
+    this.drawStamp(ctx, 1010, 150, 'ĐÃ CHỐT', 'SÀN CHÍNH THỨC', 'CẤM QUỴT KÈO');
+
+    // Footer
     ctx.textAlign = 'center';
     ctx.fillStyle = '#64748b';
     ctx.font = '12px "Outfit", sans-serif';
-    ctx.fillText(`MÃ KÈO: ${betState.hashTag}  |  LẬP LÚC: ${betState.createdDate}  |  EXAM SHOWDOWN ARENA`, 600, 755);
+    ctx.fillText(`MÃ KÈO: ${state.hashTag}  |  LẬP LÚC: ${state.createdDate}  |  EXAM BETTING PLATFORM`, 600, 755);
 
-    // RED STAMP WATERMARK
-    this.drawStamp(ctx, 1000, 160, 'ĐÃ CHỐT', 'KÈO CHÍNH THỨC', 'CẤM QUỴT KÈO');
-
-    // Trigger Download
-    const filename = `KEO_CHĂN_LE_${betState.p1.name.replace(/\s+/g, '_')}_VS_${betState.p2.name.replace(/\s+/g, '_')}.png`;
+    const filename = `SAN_KEO_THI_CU_${state.candidates.c1.name.replace(/\s+/g, '_')}_VS_${state.candidates.c2.name.replace(/\s+/g, '_')}.png`;
     this.triggerDownload(canvas, filename);
   }
 
-  // 2. Export Official Victory / Result Reveal Card
-  static exportVictoryResult(betState, summaryData) {
+  // 2. Export Settlement / Payout Results Card
+  static exportVictoryResult(state, settlement) {
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
     canvas.height = 800;
     const ctx = canvas.getContext('2d');
 
-    // Victory dark neon gradient
+    // Background
     const bgGrad = ctx.createLinearGradient(0, 0, 1200, 800);
     bgGrad.addColorStop(0, '#100c1e');
     bgGrad.addColorStop(0.5, '#1e1435');
@@ -189,7 +183,6 @@ class ProofCardExporter {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 1200, 800);
 
-    // Border
     ctx.strokeStyle = '#ffd200';
     ctx.lineWidth = 6;
     ctx.strokeRect(30, 30, 1140, 740);
@@ -197,111 +190,88 @@ class ProofCardExporter {
     // Header
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffd200';
-    ctx.font = '900 36px "Chakra Petch", sans-serif';
-    ctx.fillText('🏆 BẢNG VÀNG PHÂN XỬ KÈO THI CỬ', 600, 95);
-
-    ctx.fillStyle = '#00f2fe';
-    ctx.font = 'bold 18px "Outfit", sans-serif';
-    ctx.fillText(`KỲ THI: ${betState.examName.toUpperCase()}`, 600, 135);
-
-    // Winner Headline Card
-    ctx.fillStyle = 'rgba(255, 210, 0, 0.15)';
-    ctx.fillRect(100, 165, 1000, 130);
-    ctx.strokeStyle = '#ffd200';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(100, 165, 1000, 130);
+    ctx.font = '900 34px "Chakra Petch", sans-serif';
+    ctx.fillText('🏆 BẢNG VÀNG PHÂN XỬ & TRẢ THƯỞNG KÈO THI CỬ', 600, 85);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 32px "Chakra Petch", sans-serif';
-    ctx.fillText(summaryData.headline, 600, 220);
+    ctx.font = 'bold 16px "Outfit", sans-serif';
+    ctx.fillText(`KẾT QUẢ THỰC TẾ: ${settlement.actualFateLabel}  |  Điểm A: ${settlement.realScoreA}đ  |  Điểm B: ${settlement.realScoreB}đ`, 600, 125);
 
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '16px "Outfit", sans-serif';
-    ctx.fillText(summaryData.sub, 600, 260);
+    // 2 Columns: Winners vs Losers
+    // Left: Winners (Green)
+    ctx.fillStyle = 'rgba(0, 245, 160, 0.08)';
+    ctx.fillRect(60, 160, 520, 540);
+    ctx.strokeStyle = '#00f5a0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(60, 160, 520, 540);
 
-    // Detailed Breakdown 4 Cards Grid
-    const cards = [
-      { title: 'KẾT QUẢ KÈO CHẴN / LẺ', val: summaryData.evenOddText, icon: '🎲' },
-      { title: `KÈO TỈ SỐ ${betState.p1.name.toUpperCase()}`, val: summaryData.scoreP1Text, icon: '🎯' },
-      { title: `KÈO TỈ SỐ ${betState.p2.name.toUpperCase()}`, val: summaryData.scoreP2Text, icon: '🎯' },
-      { title: 'NGHĨA VỤ CHUNG KÈO', val: summaryData.penaltyText, icon: '🍲', isPenalty: true }
-    ];
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#00f5a0';
+    ctx.font = '900 18px "Chakra Petch", sans-serif';
+    ctx.fillText(`👑 DANH SÁCH THẮNG KÈO (${settlement.winners.length} NGƯỜI)`, 80, 195);
 
-    cards.forEach((c, idx) => {
-      const col = idx % 2;
-      const row = Math.floor(idx / 2);
-      const x = 100 + col * 520;
-      const y = 320 + row * 190;
-      const w = 480;
-      const h = 160;
-
-      ctx.fillStyle = c.isPenalty ? 'rgba(255, 56, 96, 0.15)' : 'rgba(255, 255, 255, 0.05)';
-      ctx.fillRect(x, y, w, h);
-      ctx.strokeStyle = c.isPenalty ? '#ff3860' : 'rgba(255, 255, 255, 0.15)';
-      ctx.strokeRect(x, y, w, h);
-
-      ctx.textAlign = 'left';
-      ctx.fillStyle = c.isPenalty ? '#ff3860' : '#ffd200';
-      ctx.font = 'bold 15px "Chakra Petch", sans-serif';
-      ctx.fillText(`${c.icon} ${c.title}`, x + 20, y + 35);
+    settlement.winners.slice(0, 6).forEach((w, i) => {
+      const y = 225 + i * 75;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.fillRect(80, y, 480, 65);
+      ctx.strokeStyle = 'rgba(0, 245, 160, 0.3)';
+      ctx.strokeRect(80, y, 480, 65);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px "Outfit", sans-serif';
-      this.drawWrappedText(ctx, c.val, x + 20, y + 70, 440, 24);
+      ctx.font = 'bold 15px "Outfit", sans-serif';
+      ctx.fillText(`✓ ${w.bettor}`, 95, y + 25);
+
+      ctx.fillStyle = '#00f5a0';
+      ctx.font = 'bold 13px "Outfit", sans-serif';
+      ctx.fillText(`Nhận: ${w.stake}`, 95, y + 48);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'italic 11px "Outfit", sans-serif';
+      ctx.fillText(w.reason, 250, y + 48);
+    });
+
+    // Right: Losers (Red)
+    ctx.fillStyle = 'rgba(255, 56, 96, 0.08)';
+    ctx.fillRect(620, 160, 520, 540);
+    ctx.strokeStyle = '#ff3860';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(620, 160, 520, 540);
+
+    ctx.fillStyle = '#ff3860';
+    ctx.font = '900 18px "Chakra Petch", sans-serif';
+    ctx.fillText(`💀 DANH SÁCH THUA KÈO (${settlement.losers.length} NGƯỜI)`, 640, 195);
+
+    settlement.losers.slice(0, 6).forEach((l, i) => {
+      const y = 225 + i * 75;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.fillRect(640, y, 480, 65);
+      ctx.strokeStyle = 'rgba(255, 56, 96, 0.3)';
+      ctx.strokeRect(640, y, 480, 65);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px "Outfit", sans-serif';
+      ctx.fillText(`✕ ${l.bettor}`, 655, y + 25);
+
+      ctx.fillStyle = '#ff3860';
+      ctx.font = 'bold 13px "Outfit", sans-serif';
+      ctx.fillText(`Phải chung: ${l.stake}`, 655, y + 48);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'italic 11px "Outfit", sans-serif';
+      ctx.fillText(l.reason, 810, y + 48);
     });
 
     // Stamp
-    this.drawStamp(ctx, 1020, 230, 'ĐÃ PHÂN XỬ', 'KẾT QUẢ CHÍNH THỨC', 'EXAM ARENA 2026');
+    this.drawStamp(ctx, 1020, 100, 'ĐÃ TRẢ KÈO', 'KẾT QUẢ SÀN', 'EXAM ARENA 2026');
 
     // Footer
     ctx.textAlign = 'center';
     ctx.fillStyle = '#64748b';
     ctx.font = '12px "Outfit", sans-serif';
-    ctx.fillText(`CHỨNG THỰC BỞI EXAM BET ARENA  |  MÃ KÈO: ${betState.hashTag}`, 600, 750);
+    ctx.fillText(`MÃ KÈO: ${state.hashTag}  |  CHỨNG THỰC BỞI SÀN KÈO THI CỬ GITHUB PAGES`, 600, 755);
 
-    const filename = `KET_QUA_KEO_${betState.p1.name.replace(/\s+/g, '_')}_VS_${betState.p2.name.replace(/\s+/g, '_')}.png`;
+    const filename = `KET_QUA_SAN_KEO_${state.candidates.c1.name.replace(/\s+/g, '_')}_VS_${state.candidates.c2.name.replace(/\s+/g, '_')}.png`;
     this.triggerDownload(canvas, filename);
-  }
-
-  static drawPartyCard(ctx, x, y, w, h, data) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.fillRect(x, y, w, h);
-
-    ctx.strokeStyle = data.accentColor;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, w, h);
-
-    ctx.font = '40px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(data.avatar, x + 50, y + 65);
-
-    ctx.textAlign = 'left';
-    ctx.fillStyle = data.accentColor;
-    ctx.font = 'bold 12px "Chakra Petch", sans-serif';
-    ctx.fillText(data.role, x + 100, y + 40);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 20px "Chakra Petch", sans-serif';
-    ctx.fillText(data.name, x + 100, y + 65);
-
-    ctx.fillStyle = '#ffd200';
-    ctx.font = '13px "Outfit", sans-serif';
-    ctx.fillText(`Danh hiệu: ${data.title}`, x + 100, y + 90);
-
-    ctx.fillStyle = '#00f5a0';
-    ctx.font = 'bold 13px "Outfit", sans-serif';
-    ctx.fillText(`Kèo Số Phận: ${data.betType}`, x + 30, y + 135);
-
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '13px "Outfit", sans-serif';
-    ctx.fillText(`Kèo Tỉ Số (Đoán Điểm): ${Number(data.score).toFixed(2)} đ`, x + 30, y + 160);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'italic 12px "Outfit", sans-serif';
-    ctx.fillText(`"${data.quote}"`, x + 30, y + 195);
-
-    ctx.restore();
   }
 
   static drawStamp(ctx, x, y, mainText, topText, botText) {
@@ -347,24 +317,6 @@ class ProofCardExporter {
     ctx.lineTo(20, 0);
     ctx.stroke();
     ctx.restore();
-  }
-
-  static drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
-    const words = text.split(' ');
-    let line = '';
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + ' ';
-      const metrics = ctx.measureText(testLine);
-      const testWidth = metrics.width;
-      if (testWidth > maxWidth && n > 0) {
-        ctx.fillText(line, x, y);
-        line = words[n] + ' ';
-        y += lineHeight;
-      } else {
-        line = testLine;
-      }
-    }
-    ctx.fillText(line, x, y);
   }
 
   static triggerDownload(canvas, filename) {

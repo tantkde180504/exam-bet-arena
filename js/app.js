@@ -1,40 +1,70 @@
 /**
- * KÈO THI CỬ - APP CONTROLLER
- * Main Application Logic for GitHub Pages Static Site
- * Updated with KÈO CHẴN / KÈO LẺ / KÈO TỈ SỐ
+ * SÀN KÈO THI CỬ - DYNAMIC BETTING PLATFORM ENGINE
+ * Multi-user Bet Slips, Live Market Odds, Settlement & Payout Engine
  */
 
-// Default App State
-let betState = {
+// Default State with preloaded sample community bets
+let appState = {
   examName: "Kỳ Thi Tốt Nghiệp & Đại Học 2026",
-  scale: 10,
-  p1: {
-    name: "Nguyễn Văn A",
-    avatar: "🎓",
-    title: "Học Bá Bất Diệt",
-    sbd: "2026-001",
-    betType: "EVEN", // EVEN = Kèo Chẵn (Cùng đậu hoặc cùng rớt) | ODD = Kèo Lẻ (1 người đậu)
-    targetScore: 9.00,
-    quote: "Tầm này 9+ trong tầm tay, bạn tuổi gì mà so!"
+  candidates: {
+    c1: {
+      name: "Nguyễn Văn A",
+      avatar: "🎓",
+      quote: "Mục tiêu 9+ trong tầm tay, anh em tin tưởng đặt cửa nào!"
+    },
+    c2: {
+      name: "Trần Thị B",
+      avatar: "🚀",
+      quote: "Khoanh lụi vẫn tự tin đè bẹp đối thủ nhé!"
+    }
   },
-  p2: {
-    name: "Trần Thị B",
-    avatar: "🚀",
-    title: "Thánh Khoanh Lụi",
-    sbd: "2026-002",
-    betType: "ODD",  // ODD = Kèo Lẻ
-    targetScore: 8.75,
-    quote: "Khoanh C hết vẫn đủ điểm đè bẹp bạn yêu nhé!"
-  },
-  penalty: "1 Chầu Buffet Nướng Lẩu Full Topping + 1 Ly Trà Sữa Size L",
+  betSlips: [
+    {
+      id: "slip-1",
+      bettor: "Hoàng Tử Khoanh Lụi",
+      type: "EVEN", // EVEN | ODD | SCORE
+      targetCand: null,
+      predictedScore: null,
+      stake: "1 Ly Trà Sữa Trân Châu Size L",
+      time: "20/08 - 21:00"
+    },
+    {
+      id: "slip-2",
+      bettor: "Chiến Thần Học Đêm",
+      type: "ODD",
+      targetCand: null,
+      predictedScore: null,
+      stake: "50.000 VNĐ Tiền Mặt",
+      time: "20/08 - 21:15"
+    },
+    {
+      id: "slip-3",
+      bettor: "Thầy Bói Xem Voi",
+      type: "SCORE",
+      targetCand: 1, // 1 for Cand A, 2 for Cand B
+      predictedScore: 9.25,
+      stake: "1 Chầu Buffet Nướng",
+      time: "20/08 - 21:20"
+    },
+    {
+      id: "slip-4",
+      bettor: "Hội Trưởng Fanclub Bạn B",
+      type: "SCORE",
+      targetCand: 2,
+      predictedScore: 8.50,
+      stake: "1 Ly Matcha Đá Xay",
+      time: "20/08 - 21:30"
+    }
+  ],
   createdDate: new Date().toLocaleDateString('vi-VN') + ' - ' + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-  hashTag: "#KEO-THICU-" + Math.floor(1000 + Math.random() * 9000)
+  hashTag: "#KEO-ARENA-" + Math.floor(1000 + Math.random() * 9000)
 };
 
-// Cached outcome data for image export
-let lastOutcomeData = null;
+// Cached settlement data for canvas export
+let lastSettlementData = null;
+let currentFilter = "ALL";
 
-// UTF-8 Safe Base64 Encoding & Decoding for Vietnamese text
+// UTF-8 Safe Base64 Encoding & Decoding for Vietnamese URL serialization
 function utf8ToBase64(str) {
   return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
     return String.fromCharCode('0x' + p1);
@@ -47,7 +77,7 @@ function base64ToUtf8(str) {
   }).join(''));
 }
 
-// Initialize Application
+// App Initialization
 document.addEventListener('DOMContentLoaded', () => {
   loadStateFromUrlOrStorage();
   updateUI();
@@ -55,340 +85,473 @@ document.addEventListener('DOMContentLoaded', () => {
   spawnAmbientParticles();
 });
 
-// Load state from URL hash / query or fallback to LocalStorage
+// Load state from URL or LocalStorage
 function loadStateFromUrlOrStorage() {
   const hash = window.location.hash;
   const urlParams = new URLSearchParams(window.location.search);
-  const rawData = urlParams.get('data') || (hash.startsWith('#bet=') ? hash.replace('#bet=', '') : null);
+  const rawData = urlParams.get('data') || (hash.startsWith('#data=') ? hash.replace('#data=', '') : (hash.startsWith('#bet=') ? hash.replace('#bet=', '') : null));
 
   if (rawData) {
     try {
       const decoded = JSON.parse(base64ToUtf8(rawData));
-      betState = { ...betState, ...decoded };
-      showToast('Đã tải thành công dữ liệu kèo từ liên kết chia sẻ! 🎉', 'gold');
+      appState = { ...appState, ...decoded };
+      showToast('Đã tải thành công Sàn Kèo từ link chia sẻ! 🚀', 'gold');
       return;
     } catch (e) {
-      console.warn('Could not decode URL params', e);
+      console.warn('Could not parse share link state', e);
     }
   }
 
-  const saved = localStorage.getItem('EXAM_BET_STATE_2026_V2');
+  const saved = localStorage.getItem('EXAM_BET_PLATFORM_V3');
   if (saved) {
     try {
-      betState = { ...betState, ...JSON.parse(saved) };
+      appState = { ...appState, ...JSON.parse(saved) };
     } catch (e) {
-      console.warn('Could not load local storage', e);
+      console.warn('Could not parse localStorage state', e);
     }
   }
 }
 
 // Save state to LocalStorage
 function saveStateToStorage() {
-  localStorage.setItem('EXAM_BET_STATE_2026_V2', JSON.stringify(betState));
+  localStorage.setItem('EXAM_BET_PLATFORM_V3', JSON.stringify(appState));
 }
 
 // Generate shareable link
 function getShareableUrl() {
-  const jsonStr = JSON.stringify(betState);
+  const jsonStr = JSON.stringify(appState);
   const b64 = utf8ToBase64(jsonStr);
   const baseUrl = window.location.origin + window.location.pathname;
-  return `${baseUrl}#bet=${b64}`;
+  return `${baseUrl}#data=${b64}`;
+}
+
+// Set Stake input helper
+function setStakeInput(val) {
+  soundEngine.playClick();
+  document.getElementById('inputStakeValue').value = val;
 }
 
 // Update all UI Components
 function updateUI() {
-  // 1. Arena View Elements
-  document.getElementById('displayExamName').textContent = betState.examName;
+  // 1. Candidate Info
+  document.getElementById('displayExamName').textContent = appState.examName;
 
-  // Player 1
-  document.getElementById('p1AvatarDisplay').textContent = betState.p1.avatar;
-  document.getElementById('p1TitleDisplay').textContent = betState.p1.title;
-  document.getElementById('p1NameDisplay').textContent = betState.p1.name;
-  document.getElementById('p1QuoteDisplay').textContent = `"${betState.p1.quote}"`;
-  document.getElementById('p1TargetScoreDisplay').textContent = Number(betState.p1.targetScore).toFixed(2) + ' đ';
-  document.getElementById('p1SbdDisplay').textContent = betState.p1.sbd;
+  document.getElementById('c1Avatar').textContent = appState.candidates.c1.avatar;
+  document.getElementById('c1Name').textContent = appState.candidates.c1.name;
+  document.getElementById('c1Quote').textContent = `"${appState.candidates.c1.quote}"`;
 
-  const p1BetTypeDisplay = document.getElementById('p1BetTypeDisplay');
-  if (betState.p1.betType === 'EVEN') {
-    p1BetTypeDisplay.innerHTML = '<span class="badge-even"><i class="fa-solid fa-equals"></i> BẮT CHẴN</span>';
-  } else {
-    p1BetTypeDisplay.innerHTML = '<span class="badge-odd"><i class="fa-solid fa-shuffle"></i> BẮT LẺ</span>';
+  document.getElementById('c2Avatar').textContent = appState.candidates.c2.avatar;
+  document.getElementById('c2Name').textContent = appState.candidates.c2.name;
+  document.getElementById('c2Quote').textContent = `"${appState.candidates.c2.quote}"`;
+
+  // Market 2 Candidate headers
+  document.getElementById('smC1Avatar').textContent = appState.candidates.c1.avatar;
+  document.getElementById('smC1Name').textContent = `Kèo Điểm Số ${appState.candidates.c1.name}`;
+
+  document.getElementById('smC2Avatar').textContent = appState.candidates.c2.avatar;
+  document.getElementById('smC2Name').textContent = `Kèo Điểm Số ${appState.candidates.c2.name}`;
+
+  // Result tab Candidate hints
+  document.getElementById('resC1Avatar').textContent = appState.candidates.c1.avatar;
+  document.getElementById('resC1Name').textContent = appState.candidates.c1.name;
+  document.getElementById('resC2Avatar').textContent = appState.candidates.c2.avatar;
+  document.getElementById('resC2Name').textContent = appState.candidates.c2.name;
+
+  // Contract tab info
+  document.getElementById('cExamName').textContent = appState.examName;
+  document.getElementById('contractDateDisplay').textContent = appState.createdDate;
+  document.getElementById('contractHashTag').textContent = appState.hashTag;
+  document.getElementById('cParty1Name').textContent = appState.candidates.c1.name;
+  document.getElementById('cParty1Quote').textContent = appState.candidates.c1.quote;
+  document.getElementById('cParty2Name').textContent = appState.candidates.c2.name;
+  document.getElementById('cParty2Quote').textContent = appState.candidates.c2.quote;
+
+  // 2. Compute Market 1 Live Pool (Even vs Odd)
+  const evenSlips = appState.betSlips.filter(s => s.type === 'EVEN');
+  const oddSlips = appState.betSlips.filter(s => s.type === 'ODD');
+  const scoreSlips = appState.betSlips.filter(s => s.type === 'SCORE');
+
+  const totalEvenOdd = evenSlips.length + oddSlips.length;
+  let evenPct = 50;
+  let oddPct = 50;
+  if (totalEvenOdd > 0) {
+    evenPct = Math.round((evenSlips.length / totalEvenOdd) * 100);
+    oddPct = 100 - evenPct;
   }
 
-  // Player 2
-  document.getElementById('p2AvatarDisplay').textContent = betState.p2.avatar;
-  document.getElementById('p2TitleDisplay').textContent = betState.p2.title;
-  document.getElementById('p2NameDisplay').textContent = betState.p2.name;
-  document.getElementById('p2QuoteDisplay').textContent = `"${betState.p2.quote}"`;
-  document.getElementById('p2TargetScoreDisplay').textContent = Number(betState.p2.targetScore).toFixed(2) + ' đ';
-  document.getElementById('p2SbdDisplay').textContent = betState.p2.sbd;
+  document.getElementById('evenPoolStats').textContent = `${evenSlips.length} vé (${evenPct}%)`;
+  document.getElementById('oddPoolStats').textContent = `${oddSlips.length} vé (${oddPct}%)`;
+  document.getElementById('totalEvenOddStakeText').textContent = `${totalEvenOdd} Vé Cược`;
 
-  const p2BetTypeDisplay = document.getElementById('p2BetTypeDisplay');
-  if (betState.p2.betType === 'EVEN') {
-    p2BetTypeDisplay.innerHTML = '<span class="badge-even"><i class="fa-solid fa-equals"></i> BẮT CHẴN</span>';
+  document.getElementById('poolBarEven').style.width = evenPct + '%';
+  document.getElementById('poolBarOdd').style.width = oddPct + '%';
+
+  // 3. Render Market 2 Bids List
+  const c1ScoreBids = scoreSlips.filter(s => s.targetCand === 1);
+  const c2ScoreBids = scoreSlips.filter(s => s.targetCand === 2);
+
+  const c1BidsContainer = document.getElementById('c1ScoreBidsList');
+  if (c1ScoreBids.length === 0) {
+    c1BidsContainer.innerHTML = '<span class="empty-hint">Chưa có ai đặt kèo điểm Bạn A. Hãy là người đầu tiên!</span>';
   } else {
-    p2BetTypeDisplay.innerHTML = '<span class="badge-odd"><i class="fa-solid fa-shuffle"></i> BẮT LẺ</span>';
+    c1BidsContainer.innerHTML = c1ScoreBids.map(s => `
+      <div class="bid-item-chip">
+        <span class="bid-bettor"><i class="fa-solid fa-user-tag"></i> ${escapeHtml(s.bettor)}</span>
+        <span class="bid-score">${Number(s.predictedScore).toFixed(2)} đ</span>
+        <span class="bid-stake">${escapeHtml(s.stake)}</span>
+      </div>
+    `).join('');
   }
 
-  // Center Column Matchup Overview
-  const p1PickStr = betState.p1.betType === 'EVEN' ? 'Chẵn' : 'Lẻ';
-  const p2PickStr = betState.p2.betType === 'EVEN' ? 'Chẵn' : 'Lẻ';
-  document.getElementById('p1EvenOddShort').textContent = `${betState.p1.name} Bắt ${p1PickStr}`;
-  document.getElementById('p2EvenOddShort').textContent = `${betState.p2.name} Bắt ${p2PickStr}`;
+  const c2BidsContainer = document.getElementById('c2ScoreBidsList');
+  if (c2ScoreBids.length === 0) {
+    c2BidsContainer.innerHTML = '<span class="empty-hint">Chưa có ai đặt kèo điểm Bạn B. Hãy là người đầu tiên!</span>';
+  } else {
+    c2BidsContainer.innerHTML = c2ScoreBids.map(s => `
+      <div class="bid-item-chip">
+        <span class="bid-bettor"><i class="fa-solid fa-user-tag"></i> ${escapeHtml(s.bettor)}</span>
+        <span class="bid-score">${Number(s.predictedScore).toFixed(2)} đ</span>
+        <span class="bid-stake">${escapeHtml(s.stake)}</span>
+      </div>
+    `).join('');
+  }
 
-  document.getElementById('gaugeP1Name').textContent = betState.p1.name;
-  document.getElementById('gaugeP2Name').textContent = betState.p2.name;
-  document.getElementById('gaugeP1Score').textContent = Number(betState.p1.targetScore).toFixed(2) + ' đ';
-  document.getElementById('gaugeP2Score').textContent = Number(betState.p2.targetScore).toFixed(2) + ' đ';
+  // 4. Update Badge Counts
+  document.getElementById('totalSlipsBadge').textContent = appState.betSlips.length;
+  document.getElementById('countFilterAll').textContent = appState.betSlips.length;
+  document.getElementById('countFilterEven').textContent = evenSlips.length;
+  document.getElementById('countFilterOdd').textContent = oddSlips.length;
+  document.getElementById('countFilterScore').textContent = scoreSlips.length;
 
-  // Power Gauge based on predicted scores
-  const s1 = parseFloat(betState.p1.targetScore) || 5;
-  const s2 = parseFloat(betState.p2.targetScore) || 5;
-  const total = s1 + s2;
-  const p1Width = total > 0 ? Math.round((s1 / total) * 100) : 50;
-  const p2Width = 100 - p1Width;
-  document.getElementById('gaugeBarP1').style.width = p1Width + '%';
-  document.getElementById('gaugeBarP2').style.width = p2Width + '%';
+  // 5. Render Bet Slips Feed (Tab 2)
+  renderBetSlipsFeed();
 
-  // Stakes
-  document.getElementById('stakesDisplay').innerHTML = `<i class="fa-solid fa-utensils"></i> ${betState.penalty}`;
-
-  // 2. Contract View Elements
-  document.getElementById('cExamName').textContent = betState.examName;
-  document.getElementById('contractDateDisplay').textContent = betState.createdDate;
-  document.getElementById('contractHashTag').textContent = betState.hashTag;
-
-  document.getElementById('cParty1Name').textContent = betState.p1.name;
-  document.getElementById('cParty1Title').textContent = betState.p1.title;
-  document.getElementById('cParty1Fate').textContent = betState.p1.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ';
-  document.getElementById('cParty1Score').textContent = Number(betState.p1.targetScore).toFixed(2) + ' đ';
-  document.getElementById('cParty1Quote').textContent = betState.p1.quote;
-  document.getElementById('cSignA').textContent = betState.p1.name;
-
-  document.getElementById('cParty2Name').textContent = betState.p2.name;
-  document.getElementById('cParty2Title').textContent = betState.p2.title;
-  document.getElementById('cParty2Fate').textContent = betState.p2.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ';
-  document.getElementById('cParty2Score').textContent = Number(betState.p2.targetScore).toFixed(2) + ' đ';
-  document.getElementById('cParty2Quote').textContent = betState.p2.quote;
-  document.getElementById('cSignB').textContent = betState.p2.name;
-
-  document.getElementById('cPenaltyText').textContent = betState.penalty;
-
-  // 3. Result View Inputs hints
-  document.getElementById('resP1Avatar').textContent = betState.p1.avatar;
-  document.getElementById('resP1Name').textContent = betState.p1.name;
-  document.getElementById('resP1TargetHint').textContent = `Bắt ${p1PickStr} - Đoán: ${Number(betState.p1.targetScore).toFixed(2)} đ`;
-
-  document.getElementById('resP2Avatar').textContent = betState.p2.avatar;
-  document.getElementById('resP2Name').textContent = betState.p2.name;
-  document.getElementById('resP2TargetHint').textContent = `Bắt ${p2PickStr} - Đoán: ${Number(betState.p2.targetScore).toFixed(2)} đ`;
+  // 6. Render Contract Ledger (Tab 3)
+  renderContractLedger();
 }
 
-// Populate Modal Form with State
-function fillModalForm() {
-  document.getElementById('inputExamName').value = betState.examName;
-  document.getElementById('inputExamType').value = betState.scale;
+// Render Bet Slips Feed with filtering
+function renderBetSlipsFeed() {
+  const container = document.getElementById('slipsFeed');
+  if (!container) return;
 
-  // P1
-  document.getElementById('inputP1Name').value = betState.p1.name;
-  document.getElementById('inputP1Title').value = betState.p1.title;
-  document.getElementById('inputP1Sbd').value = betState.p1.sbd;
-  document.getElementById('inputP1BetType').value = betState.p1.betType;
-  document.getElementById('inputP1TargetScore').value = betState.p1.targetScore;
-  document.getElementById('inputP1Quote').value = betState.p1.quote;
+  let filtered = appState.betSlips;
+  if (currentFilter === 'EVEN') filtered = appState.betSlips.filter(s => s.type === 'EVEN');
+  else if (currentFilter === 'ODD') filtered = appState.betSlips.filter(s => s.type === 'ODD');
+  else if (currentFilter === 'SCORE') filtered = appState.betSlips.filter(s => s.type === 'SCORE');
 
-  // P2
-  document.getElementById('inputP2Name').value = betState.p2.name;
-  document.getElementById('inputP2Title').value = betState.p2.title;
-  document.getElementById('inputP2Sbd').value = betState.p2.sbd;
-  document.getElementById('inputP2BetType').value = betState.p2.betType;
-  document.getElementById('inputP2TargetScore').value = betState.p2.targetScore;
-  document.getElementById('inputP2Quote').value = betState.p2.quote;
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #64748b;">
+        <i class="fa-solid fa-inbox" style="font-size: 36px; margin-bottom: 8px;"></i>
+        <p>Chưa có vé cược nào trong mục này. Bấm <b>"Thêm Vé Cược"</b> để vào kèo ngay!</p>
+      </div>
+    `;
+    return;
+  }
 
-  // Penalty
-  document.getElementById('inputCustomPenalty').value = betState.penalty;
+  container.innerHTML = filtered.map(slip => {
+    let typeClass = "slip-even";
+    let typeBadge = '<span class="slip-pick-tag tag-even"><i class="fa-solid fa-equals"></i> CỬA CHẴN (Cùng Đậu / Cùng Rớt)</span>';
 
-  // Select Avatar Chips
-  document.querySelectorAll('#p1AvatarChips .chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.val === betState.p1.avatar);
-  });
-  document.querySelectorAll('#p2AvatarChips .chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.val === betState.p2.avatar);
-  });
+    if (slip.type === 'ODD') {
+      typeClass = "slip-odd";
+      typeBadge = '<span class="slip-pick-tag tag-odd"><i class="fa-solid fa-shuffle"></i> CỬA LẺ (1 Người Đậu)</span>';
+    } else if (slip.type === 'SCORE') {
+      typeClass = "slip-score";
+      const candName = slip.targetCand === 1 ? appState.candidates.c1.name : appState.candidates.c2.name;
+      typeBadge = `<span class="slip-pick-tag tag-score"><i class="fa-solid fa-crosshairs"></i> ĐOÁN ĐIỂM: ${candName} = ${Number(slip.predictedScore).toFixed(2)} đ</span>`;
+    }
+
+    return `
+      <div class="bet-slip-card ${typeClass}">
+        <div class="slip-header">
+          <span class="slip-bettor"><i class="fa-solid fa-user"></i> ${escapeHtml(slip.bettor)}</span>
+          <button class="slip-delete-btn" onclick="deleteBetSlip('${slip.id}')" title="Xóa vé này">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="slip-body">
+          ${typeBadge}
+          <div class="slip-stake-box">
+            <i class="fa-solid fa-hand-holding-dollar"></i> Cược: <b>${escapeHtml(slip.stake)}</b>
+          </div>
+        </div>
+        <div class="slip-time"><i class="fa-regular fa-clock"></i> ${slip.time}</div>
+      </div>
+    `;
+  }).join('');
 }
 
-// Save Modal Form back to State
-function saveModalForm() {
-  betState.examName = document.getElementById('inputExamName').value.trim() || 'Kỳ Thi 2026';
-  betState.scale = parseInt(document.getElementById('inputExamType').value) || 10;
+// Render Compact Ledger in Certificate View
+function renderContractLedger() {
+  const container = document.getElementById('contractLedgerList');
+  if (!container) return;
 
-  // Avatar chips active
-  const p1Chip = document.querySelector('#p1AvatarChips .chip.active');
-  const p2Chip = document.querySelector('#p2AvatarChips .chip.active');
+  if (appState.betSlips.length === 0) {
+    container.innerHTML = '<span class="empty-hint">Chưa có ai vào kèo trên sàn này.</span>';
+    return;
+  }
 
-  betState.p1 = {
-    name: document.getElementById('inputP1Name').value.trim() || 'Đấu Thủ A',
-    avatar: p1Chip ? p1Chip.dataset.val : '🎓',
-    title: document.getElementById('inputP1Title').value.trim() || 'Học Bá',
-    sbd: document.getElementById('inputP1Sbd').value.trim() || '2026-001',
-    betType: document.getElementById('inputP1BetType').value,
-    targetScore: parseFloat(document.getElementById('inputP1TargetScore').value) || 8.0,
-    quote: document.getElementById('inputP1Quote').value.trim() || 'Tự tin đỗ đầu!'
+  container.innerHTML = appState.betSlips.map(s => {
+    let pickText = s.type === 'EVEN' ? 'Cửa Chẵn' : (s.type === 'ODD' ? 'Cửa Lẻ' : `Đoán ${s.targetCand === 1 ? 'A' : 'B'}: ${Number(s.predictedScore).toFixed(2)}đ`);
+    return `
+      <div class="ledger-item">
+        <span class="bettor-name"><b>${escapeHtml(s.bettor)}</b> (${pickText})</span>
+        <span class="stake-text">${escapeHtml(s.stake)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// Quick Open Bet Modals
+function quickOpenBetModal(choice) {
+  soundEngine.playClick();
+  document.querySelector('input[name="betCategory"][value="EVEN_ODD"]').checked = true;
+  toggleBetCategoryFields();
+  document.querySelector(`input[name="inputEvenOddChoice"][value="${choice}"]`).checked = true;
+  openBetModal();
+}
+
+function quickOpenScoreModal(candNum) {
+  soundEngine.playClick();
+  document.querySelector('input[name="betCategory"][value="SCORE_EXACT"]').checked = true;
+  toggleBetCategoryFields();
+  document.getElementById('inputScoreTargetCand').value = candNum;
+  openBetModal();
+}
+
+function openBetModal() {
+  soundEngine.playClick();
+  document.getElementById('inputBettorName').value = '';
+  document.getElementById('betSlipModalOverlay').classList.add('active');
+}
+
+function openConfigModal() {
+  soundEngine.playClick();
+  document.getElementById('cfgExamName').value = appState.examName;
+  document.getElementById('cfgC1Name').value = appState.candidates.c1.name;
+  document.getElementById('cfgC1Avatar').value = appState.candidates.c1.avatar;
+  document.getElementById('cfgC1Quote').value = appState.candidates.c1.quote;
+
+  document.getElementById('cfgC2Name').value = appState.candidates.c2.name;
+  document.getElementById('cfgC2Avatar').value = appState.candidates.c2.avatar;
+  document.getElementById('cfgC2Quote').value = appState.candidates.c2.quote;
+
+  document.getElementById('configModalOverlay').classList.add('active');
+}
+
+function closeModal(modalId) {
+  soundEngine.playClick();
+  document.getElementById(modalId).classList.remove('active');
+}
+
+function toggleBetCategoryFields() {
+  const cat = document.querySelector('input[name="betCategory"]:checked').value;
+  const evenOddBox = document.getElementById('evenOddFields');
+  const scoreBox = document.getElementById('scoreExactFields');
+
+  if (cat === 'EVEN_ODD') {
+    evenOddBox.style.display = 'block';
+    scoreBox.style.display = 'none';
+  } else {
+    evenOddBox.style.display = 'none';
+    scoreBox.style.display = 'block';
+  }
+}
+
+// Confirm Place Bet Slip
+function confirmPlaceBet() {
+  const bettorName = document.getElementById('inputBettorName').value.trim();
+  const stakeVal = document.getElementById('inputStakeValue').value.trim();
+
+  if (!bettorName) {
+    alert('Vui lòng nhập tên / nickname của bạn!');
+    return;
+  }
+  if (!stakeVal) {
+    alert('Vui lòng nhập mức cược / phần thưởng!');
+    return;
+  }
+
+  const category = document.querySelector('input[name="betCategory"]:checked').value;
+  const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN');
+
+  let newSlip = {
+    id: "slip-" + Date.now(),
+    bettor: bettorName,
+    type: category === 'EVEN_ODD' ? document.querySelector('input[name="inputEvenOddChoice"]:checked').value : 'SCORE',
+    targetCand: category === 'SCORE_EXACT' ? parseInt(document.getElementById('inputScoreTargetCand').value) : null,
+    predictedScore: category === 'SCORE_EXACT' ? parseFloat(document.getElementById('inputPredictedScore').value) : null,
+    stake: stakeVal,
+    time: timeStr
   };
 
-  betState.p2 = {
-    name: document.getElementById('inputP2Name').value.trim() || 'Đấu Thủ B',
-    avatar: p2Chip ? p2Chip.dataset.val : '🚀',
-    title: document.getElementById('inputP2Title').value.trim() || 'Chiến Thần',
-    sbd: document.getElementById('inputP2Sbd').value.trim() || '2026-002',
-    betType: document.getElementById('inputP2BetType').value,
-    targetScore: parseFloat(document.getElementById('inputP2TargetScore').value) || 8.0,
-    quote: document.getElementById('inputP2Quote').value.trim() || 'Không ngán đối thủ nào!'
-  };
+  appState.betSlips.unshift(newSlip);
+  saveStateToStorage();
+  updateUI();
+  closeModal('betSlipModalOverlay');
+  soundEngine.playGavel();
+  showToast(`🎉 ${bettorName} đã vào kèo thành công!`, 'gold');
+}
 
-  betState.penalty = document.getElementById('inputCustomPenalty').value.trim() || '1 Chầu Ăn Uống Hoành Tráng';
+// Delete Bet Slip
+function deleteBetSlip(id) {
+  soundEngine.playClick();
+  appState.betSlips = appState.betSlips.filter(s => s.id !== id);
+  saveStateToStorage();
+  updateUI();
+  showToast('Đã hủy vé cược thành công.');
+}
+
+// Save Candidate Config
+function saveCandidatesConfig() {
+  appState.examName = document.getElementById('cfgExamName').value.trim() || 'Kỳ Thi 2026';
+  appState.candidates.c1 = {
+    name: document.getElementById('cfgC1Name').value.trim() || 'Thí sinh 1',
+    avatar: document.getElementById('cfgC1Avatar').value.trim() || '🎓',
+    quote: document.getElementById('cfgC1Quote').value.trim() || 'Tự tin đỗ đầu!'
+  };
+  appState.candidates.c2 = {
+    name: document.getElementById('cfgC2Name').value.trim() || 'Thí sinh 2',
+    avatar: document.getElementById('cfgC2Avatar').value.trim() || '🚀',
+    quote: document.getElementById('cfgC2Quote').value.trim() || 'Khoanh lụi vẫn đè bẹp đối thủ!'
+  };
 
   saveStateToStorage();
   updateUI();
-  closeModal('betModalOverlay');
+  closeModal('configModalOverlay');
   soundEngine.playGavel();
-  showToast('Đã chốt kèo Chẵn/Lẻ & Tỉ Số thành công! ⚡', 'gold');
-
-  // Trigger stamp animation in contract view
-  const stamp = document.getElementById('stampVerified');
-  if (stamp) {
-    stamp.classList.remove('pulse-stamp');
-    void stamp.offsetWidth; // Reflow
-    stamp.classList.add('pulse-stamp');
-  }
+  showToast('Đã lưu thông tin 2 thí sinh thành công! ⚡', 'gold');
 }
 
-// Calculate Bet Outcome & Reveal Winner
-function calculateVerdict() {
+// Mở Bát & Settlement Engine
+function calculateSettlement() {
   soundEngine.playClick();
 
-  const realP1Fate = document.querySelector('input[name="resP1Fate"]:checked').value;
-  const realP2Fate = document.querySelector('input[name="resP2Fate"]:checked').value;
+  const realC1Fate = document.querySelector('input[name="resC1Fate"]:checked').value;
+  const realC2Fate = document.querySelector('input[name="resC2Fate"]:checked').value;
+  const realC1Score = parseFloat(document.getElementById('resC1ScoreInput').value) || 0;
+  const realC2Score = parseFloat(document.getElementById('resC2ScoreInput').value) || 0;
 
-  const realP1Score = parseFloat(document.getElementById('resP1ScoreInput').value) || 0;
-  const realP2Score = parseFloat(document.getElementById('resP2ScoreInput').value) || 0;
-
-  // 1. Determine Actual Even / Odd Outcome
-  // EVEN = Cả 2 cùng PASS (Pass - Pass) hoặc Cả 2 cùng FAIL (Fail - Fail)
-  // ODD = 1 người PASS, 1 người FAIL
-  const isActualEven = (realP1Fate === realP2Fate);
-  const actualOutcomeType = isActualEven ? 'EVEN' : 'ODD';
+  // 1. Determine Actual Even / Odd Status
+  const isActualEven = (realC1Fate === realC2Fate);
   const actualOutcomeLabel = isActualEven 
-    ? `CHẴN (${realP1Fate === 'PASS' ? 'Cả 2 cùng ĐẬU 🎓' : 'Cả 2 cùng RỚT 😭'})`
-    : 'LẺ (1 người Đậu, 1 người Rớt ⚡)';
+    ? `CHẴN (${realC1Fate === 'PASS' ? 'Cả 2 cùng ĐẬU 🎓' : 'Cả 2 cùng RỚT 😭'})`
+    : 'LẺ (Đúng 1 người Đậu ⚡)';
 
-  // Who won the Even/Odd Bet?
-  const p1WonEvenOdd = (betState.p1.betType === actualOutcomeType);
-  const p2WonEvenOdd = (betState.p2.betType === actualOutcomeType);
+  // 2. Scan every single slip in the market
+  const winners = [];
+  const losers = [];
 
-  let evenOddSummaryText = `Kết quả thi ra: ${actualOutcomeLabel}. `;
-  if (p1WonEvenOdd && !p2WonEvenOdd) {
-    evenOddSummaryText += `👉 ${betState.p1.name} THẮNG KÈO SỐ PHẬN!`;
-  } else if (!p1WonEvenOdd && p2WonEvenOdd) {
-    evenOddSummaryText += `👉 ${betState.p2.name} THẮNG KÈO SỐ PHẬN!`;
-  } else if (p1WonEvenOdd && p2WonEvenOdd) {
-    evenOddSummaryText += `👉 Cả 2 cùng bắt đúng ${actualOutcomeLabel}!`;
-  } else {
-    evenOddSummaryText += '👉 Cả 2 cùng bắt sai kèo số phận!';
-  }
+  appState.betSlips.forEach(slip => {
+    let isWinner = false;
+    let reason = "";
 
-  // 2. Score Accuracy Bet (Kèo Tỉ Số)
-  const targetA = parseFloat(betState.p1.targetScore) || 0;
-  const targetB = parseFloat(betState.p2.targetScore) || 0;
+    if (slip.type === 'EVEN') {
+      if (isActualEven) {
+        isWinner = true;
+        reason = `Bắt đúng CỬA CHẴN (${actualOutcomeLabel})`;
+      } else {
+        isWinner = false;
+        reason = `Bắt Cửa Chẵn nhưng kết quả ra Cửa Lẻ`;
+      }
+    } else if (slip.type === 'ODD') {
+      if (!isActualEven) {
+        isWinner = true;
+        reason = `Bắt đúng CỬA LẺ (${actualOutcomeLabel})`;
+      } else {
+        isWinner = false;
+        reason = `Bắt Cửa Lẻ nhưng kết quả ra Cửa Chẵn`;
+      }
+    } else if (slip.type === 'SCORE') {
+      const targetName = slip.targetCand === 1 ? appState.candidates.c1.name : appState.candidates.c2.name;
+      const realScore = slip.targetCand === 1 ? realC1Score : realC2Score;
+      const diff = Math.abs(realScore - slip.predictedScore);
 
-  const diffA = Math.abs(realP1Score - targetA);
-  const diffB = Math.abs(realP2Score - targetB);
+      if (diff < 0.01) {
+        isWinner = true;
+        reason = `Đoán ${targetName} = ${slip.predictedScore.toFixed(2)}đ (🎯 TRÚNG TUYỆT ĐỐI)`;
+      } else if (diff <= 0.25) {
+        isWinner = true;
+        reason = `Đoán ${targetName} = ${slip.predictedScore.toFixed(2)}đ (Lệch chỉ ${diff.toFixed(2)}đ -> Thắng Kèo)`;
+      } else {
+        isWinner = false;
+        reason = `Đoán ${targetName} = ${slip.predictedScore.toFixed(2)}đ nhưng điểm thật là ${realScore.toFixed(2)}đ (Lệch ${diff.toFixed(2)}đ)`;
+      }
+    }
 
-  const p1Exact = diffA < 0.01;
-  const p2Exact = diffB < 0.01;
+    const item = {
+      bettor: slip.bettor,
+      stake: slip.stake,
+      reason: reason,
+      type: slip.type
+    };
 
-  let scoreSummaryP1 = `Đoán: ${targetA.toFixed(2)}đ | Thật: ${realP1Score.toFixed(2)}đ `;
-  scoreSummaryP1 += p1Exact ? '(🎯 CHÍNH XÁC TUYỆT ĐỐI)' : `(Lệch ${diffA.toFixed(2)}đ)`;
+    if (isWinner) winners.push(item);
+    else losers.push(item);
+  });
 
-  let scoreSummaryP2 = `Đoán: ${targetB.toFixed(2)}đ | Thật: ${realP2Score.toFixed(2)}đ `;
-  scoreSummaryP2 += p2Exact ? '(🎯 CHÍNH XÁC TUYỆT ĐỐI)' : `(Lệch ${diffB.toFixed(2)}đ)`;
-
-  // 3. Points Awarding System
-  // Even/Odd Bet Win: +3 points
-  // Exact Score Match: +3 points, or closer score prediction: +1 point
-  let p1Points = 0;
-  let p2Points = 0;
-
-  if (p1WonEvenOdd) p1Points += 3;
-  if (p2WonEvenOdd) p2Points += 3;
-
-  if (p1Exact) p1Points += 3;
-  if (p2Exact) p2Points += 3;
-
-  if (diffA < diffB) p1Points += 1;
-  else if (diffB < diffA) p2Points += 1;
-
-  // 4. Overall Winner & Loser
-  let winner = null;
-  let loser = null;
-  let isTie = false;
-
-  if (p1Points > p2Points) {
-    winner = betState.p1.name;
-    loser = betState.p2.name;
-  } else if (p2Points > p1Points) {
-    winner = betState.p2.name;
-    loser = betState.p1.name;
-  } else {
-    isTie = true;
-  }
-
-  const headlineText = isTie ? 'KÈO BẤT PHÂN THẮNG BẠI (HÒA KÈO)!' : `👑 ${winner.toUpperCase()} CHIẾN THẮNG TOÀN DIỆN!`;
-  const subText = isTie 
-    ? 'Hai bên hòa điểm kèo, cùng vui vẻ chia đôi hóa đơn hoặc đi quẩy chung!'
-    : `${loser} đã thua kèo và bắt buộc phải thực hiện nghĩa vụ chung kèo!`;
-
-  const penaltySummaryText = isTie 
-    ? `Cả 2 cùng cưa đôi hóa đơn: ${betState.penalty}`
-    : `${loser} phải bao ngay: ${betState.penalty}`;
-
-  lastOutcomeData = {
-    headline: headlineText,
-    sub: subText,
-    evenOddText: evenOddSummaryText,
-    scoreP1Text: scoreSummaryP1,
-    scoreP2Text: scoreSummaryP2,
-    penaltyText: penaltySummaryText
+  // 3. Cache Data for export
+  lastSettlementData = {
+    actualFateLabel: actualOutcomeLabel,
+    realScoreA: realC1Score.toFixed(2),
+    realScoreB: realC2Score.toFixed(2),
+    winners: winners,
+    losers: losers
   };
 
-  // Populate Outcome Dashboard in DOM
+  // 4. Render DOM Outcome Dashboard
   const dashboard = document.getElementById('outcomeDashboard');
   dashboard.style.display = 'block';
 
-  document.getElementById('verdictHeadline').textContent = headlineText;
-  document.getElementById('verdictSub').textContent = subText;
-  document.getElementById('evenOddResultSummary').textContent = evenOddSummaryText;
-  document.getElementById('scoreResultP1Summary').textContent = scoreSummaryP1;
-  document.getElementById('scoreResultP2Summary').textContent = scoreSummaryP2;
+  document.getElementById('settleFateVal').textContent = actualOutcomeLabel;
+  document.getElementById('settleScoreAVal').textContent = realC1Score.toFixed(2) + ' đ';
+  document.getElementById('settleScoreBVal').textContent = realC2Score.toFixed(2) + ' đ';
 
-  if (isTie) {
-    document.getElementById('penaltyClaimSummary').innerHTML = `Cả 2 cùng cưa đôi: <b>${betState.penalty}</b>`;
+  document.getElementById('winnerCount').textContent = winners.length;
+  document.getElementById('loserCount').textContent = losers.length;
+
+  const winnersList = document.getElementById('winnersList');
+  if (winners.length === 0) {
+    winnersList.innerHTML = '<span class="empty-hint">Không có ai thắng kèo đợt này!</span>';
   } else {
-    document.getElementById('penaltyClaimSummary').innerHTML = `<b class="loser-name">${loser}</b> phải chung ngay: <b>${betState.penalty}</b>`;
+    winnersList.innerHTML = winners.map(w => `
+      <div class="payout-item-card">
+        <div class="payout-item-header">
+          <span class="payout-name"><i class="fa-solid fa-crown"></i> ${escapeHtml(w.bettor)}</span>
+          <span class="payout-stake"><i class="fa-solid fa-gift"></i> Nhận: ${escapeHtml(w.stake)}</span>
+        </div>
+        <div class="payout-reason">${escapeHtml(w.reason)}</div>
+      </div>
+    `).join('');
+  }
+
+  const losersList = document.getElementById('losersList');
+  if (losers.length === 0) {
+    losersList.innerHTML = '<span class="empty-hint">Toàn bộ sàn đều dự đoán chính xác!</span>';
+  } else {
+    losersList.innerHTML = losers.map(l => `
+      <div class="payout-item-card">
+        <div class="payout-item-header">
+          <span class="payout-name"><i class="fa-solid fa-skull"></i> ${escapeHtml(l.bettor)}</span>
+          <span class="payout-stake"><i class="fa-solid fa-receipt"></i> Phải chung: ${escapeHtml(l.stake)}</span>
+        </div>
+        <div class="payout-reason">${escapeHtml(l.reason)}</div>
+      </div>
+    `).join('');
   }
 
   soundEngine.playVictory();
 
-  // Confetti Blast!
   if (confettiEngine) {
     confettiEngine.launch(4500);
   }
 
-  // Scroll smoothly to result
   dashboard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Stepper score adjust
+// Stepper score
 function stepScore(inputId, delta) {
   soundEngine.playClick();
   const input = document.getElementById(inputId);
@@ -398,7 +561,7 @@ function stepScore(inputId, delta) {
   input.value = val.toFixed(2);
 }
 
-// Switch Tabs
+// Switch tabs
 function switchTab(tabId) {
   soundEngine.playClick();
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -409,19 +572,13 @@ function switchTab(tabId) {
   });
 }
 
-// Modal open/close
-function openEditModal(playerNum = null) {
-  soundEngine.playClick();
-  fillModalForm();
-  document.getElementById('betModalOverlay').classList.add('active');
+// HTML Entity Escape
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-function closeModal(modalId) {
-  soundEngine.playClick();
-  document.getElementById(modalId).classList.remove('active');
-}
-
-// Toast notification helper
+// Toast helper
 function showToast(message, type = 'cyan') {
   const container = document.getElementById('toastContainer');
   if (!container) return;
@@ -438,15 +595,18 @@ function showToast(message, type = 'cyan') {
   }, 3500);
 }
 
-// Setup Event Listeners
+// Event Listeners setup
 function setupEventListeners() {
-  // Tab switching
-  document.getElementById('tabBetView').addEventListener('click', () => switchTab('bet-view'));
+  // Tabs
+  document.getElementById('tabMarketView').addEventListener('click', () => switchTab('market-view'));
+  document.getElementById('tabSlipsView').addEventListener('click', () => switchTab('slips-view'));
   document.getElementById('tabContractView').addEventListener('click', () => switchTab('contract-view'));
   document.getElementById('tabResultView').addEventListener('click', () => switchTab('result-view'));
 
-  // Header buttons
-  document.getElementById('newBetTopBtn').addEventListener('click', () => openEditModal());
+  // Header
+  document.getElementById('openBetModalBtn').addEventListener('click', openBetModal);
+  document.getElementById('openBetSlipFromMarketBtn').addEventListener('click', openBetModal);
+  document.getElementById('openResultTabBtn').addEventListener('click', () => switchTab('result-view'));
   document.getElementById('quickHelpBtn').addEventListener('click', () => {
     soundEngine.playClick();
     document.getElementById('helpModalOverlay').classList.add('active');
@@ -456,98 +616,89 @@ function setupEventListeners() {
   const soundBtn = document.getElementById('soundToggleBtn');
   soundBtn.addEventListener('click', () => {
     const isMuted = soundEngine.toggleMute();
-    soundBtn.innerHTML = isMuted 
-      ? '<i class="fa-solid fa-volume-xmark"></i>' 
-      : '<i class="fa-solid fa-volume-high"></i>';
+    soundBtn.innerHTML = isMuted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
     showToast(isMuted ? 'Đã tắt âm thanh' : 'Đã bật âm thanh');
   });
 
-  // Arena action bar buttons
-  document.getElementById('quickEditBetBtn').addEventListener('click', () => openEditModal());
-  document.getElementById('viewContractBtn').addEventListener('click', () => switchTab('contract-view'));
-  document.getElementById('openResultBtn').addEventListener('click', () => switchTab('result-view'));
-
-  // Copy share link
+  // Share link
   document.getElementById('shareLinkBtn').addEventListener('click', () => {
     soundEngine.playClick();
     const url = getShareableUrl();
     navigator.clipboard.writeText(url).then(() => {
-      showToast('Đã sao chép liên kết chia sẻ kèo vào Clipboard! 🔗', 'gold');
+      showToast('Đã sao chép liên kết toàn bộ Sàn Kèo vào Clipboard! 🔗', 'gold');
     }).catch(() => {
-      prompt('Sao chép đường link này để gửi cho bạn bè:', url);
+      prompt('Sao chép đường link này gửi vào group:', url);
     });
   });
 
-  // Export Contract image
+  // Clear all slips
+  document.getElementById('clearAllSlipsBtn').addEventListener('click', () => {
+    if (confirm('Bạn có chắc chắn muốn xóa toàn bộ danh sách vé cược trên sàn không?')) {
+      appState.betSlips = [];
+      saveStateToStorage();
+      updateUI();
+      showToast('Đã làm trống toàn bộ sàn cược.');
+    }
+  });
+
+  // Filter chips in Tab 2
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      soundEngine.playClick();
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentFilter = chip.dataset.filter;
+      renderBetSlipsFeed();
+    });
+  });
+
+  // Modal Actions
+  document.getElementById('confirmPlaceBetBtn').addEventListener('click', confirmPlaceBet);
+  document.getElementById('saveCandidatesConfigBtn').addEventListener('click', saveCandidatesConfig);
+
+  // Settlement & Reveal
+  document.getElementById('calculateResultBtn').addEventListener('click', calculateSettlement);
+  document.getElementById('replaySoundBtn').addEventListener('click', () => {
+    soundEngine.playVictory();
+    if (confettiEngine) confettiEngine.launch(3000);
+  });
+
+  // Export Canvas Images
   document.getElementById('exportImageBtn').addEventListener('click', () => {
     soundEngine.playClick();
-    ProofCardExporter.exportContract(betState);
-    showToast('Đang tải ảnh chứng nhận kèo về máy! 📸', 'gold');
+    ProofCardExporter.exportContract(appState);
+    showToast('Đang tải ảnh bằng chứng Sàn Kèo về máy! 📸', 'gold');
+  });
+
+  document.getElementById('exportVictoryCardBtn').addEventListener('click', () => {
+    soundEngine.playClick();
+    if (lastSettlementData) {
+      ProofCardExporter.exportVictoryResult(appState, lastSettlementData);
+    } else {
+      ProofCardExporter.exportContract(appState);
+    }
+    showToast('Đã xuất ảnh bảng vàng trả thưởng! 🏆', 'gold');
   });
 
   // Copy Contract Text
   document.getElementById('copyContractTextBtn').addEventListener('click', () => {
     soundEngine.playClick();
-    const p1Type = betState.p1.betType === 'EVEN' ? 'KÈO CHẴN' : 'KÈO LẺ';
-    const p2Type = betState.p2.betType === 'EVEN' ? 'KÈO CHẴN' : 'KÈO LẺ';
+    const evenSlips = appState.betSlips.filter(s => s.type === 'EVEN');
+    const oddSlips = appState.betSlips.filter(s => s.type === 'ODD');
+    const scoreSlips = appState.betSlips.filter(s => s.type === 'SCORE');
 
-    const text = `📜 BIÊN BẢN GIAO KÈO: ${betState.examName}\n` +
-      `👤 Bên A: ${betState.p1.name} (${betState.p1.title}) - Bắt: ${p1Type} - Đoán: ${betState.p1.targetScore}đ\n` +
-      `👤 Bên B: ${betState.p2.name} (${betState.p2.title}) - Bắt: ${p2Type} - Đoán: ${betState.p2.targetScore}đ\n` +
-      `⚖️ Thể lệ: Kèo Chẵn (Cùng Đậu / Cùng Rớt) vs Kèo Lẻ (1 người Đậu) & Kèo Tỉ Số\n` +
-      `🍲 Hình phạt: ${betState.penalty}\n` +
-      `👉 Xem chi tiết tại: ${getShareableUrl()}`;
-    
+    let text = `📜 BIÊN BẢN SÀN KÈO THI CỬ: ${appState.examName}\n` +
+      `🥊 Thí sinh 1: ${appState.candidates.c1.name} VS Thí sinh 2: ${appState.candidates.c2.name}\n` +
+      `📊 Tổng số vé: ${appState.betSlips.length} (Chẵn: ${evenSlips.length} vé | Lẻ: ${oddSlips.length} vé | Tỉ số: ${scoreSlips.length} vé)\n` +
+      `👉 Xem và vào kèo trực tiếp tại: ${getShareableUrl()}`;
+
     navigator.clipboard.writeText(text).then(() => {
-      showToast('Đã sao chép nội dung biên bản! 📋');
-    });
-  });
-
-  // Verdict calculation
-  document.getElementById('calculateResultBtn').addEventListener('click', calculateVerdict);
-  document.getElementById('replaySoundBtn').addEventListener('click', () => {
-    soundEngine.playVictory();
-    if (confettiEngine) confettiEngine.launch(3000);
-  });
-  document.getElementById('exportVictoryCardBtn').addEventListener('click', () => {
-    if (lastOutcomeData) {
-      ProofCardExporter.exportVictoryResult(betState, lastOutcomeData);
-    } else {
-      ProofCardExporter.exportContract(betState);
-    }
-    showToast('Đã xuất hình ảnh kết quả thắng thua! 🏆', 'gold');
-  });
-
-  // Save Bet Modal
-  document.getElementById('saveBetConfigBtn').addEventListener('click', saveModalForm);
-
-  // Avatar chips selection
-  document.querySelectorAll('#p1AvatarChips .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      soundEngine.playClick();
-      document.querySelectorAll('#p1AvatarChips .chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-    });
-  });
-
-  document.querySelectorAll('#p2AvatarChips .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      soundEngine.playClick();
-      document.querySelectorAll('#p2AvatarChips .chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-    });
-  });
-
-  // Penalty Preset Chips
-  document.querySelectorAll('#penaltyChips .p-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      soundEngine.playClick();
-      document.getElementById('inputCustomPenalty').value = chip.dataset.text;
+      showToast('Đã sao chép nội dung sàn kèo! 📋');
     });
   });
 }
 
-// Background Floating Ambient Sparkles
+// Background Floating Particles
 function spawnAmbientParticles() {
   const container = document.getElementById('particlesContainer');
   if (!container) return;
