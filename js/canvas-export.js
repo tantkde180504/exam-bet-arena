@@ -1,6 +1,7 @@
 /**
  * Canvas Image Exporter
  * Generates crisp 1200x800 PNG Certificate & Victory Result Card for easy sharing
+ * Updated with Kèo Chẵn / Kèo Lẻ & Kèo Tỉ Số
  */
 
 class ProofCardExporter {
@@ -65,8 +66,8 @@ class ProofCardExporter {
     ctx.fillText('Độc Lập - Tự Do - Thua Là Chung Kèo', 600, 112);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 32px "Chakra Petch", sans-serif';
-    ctx.fillText('BIÊN BẢN GIAO KÈO ĐIỂM THI VÀ SỐ PHẬN', 600, 155);
+    ctx.font = '900 30px "Chakra Petch", sans-serif';
+    ctx.fillText('BIÊN BẢN GIAO KÈO CHẴN / LẺ & TỈ SỐ ĐIỂM THI', 600, 155);
 
     ctx.fillStyle = '#00f2fe';
     ctx.font = 'bold 16px "Outfit", sans-serif';
@@ -80,10 +81,9 @@ class ProofCardExporter {
       avatar: betState.p1.avatar,
       title: betState.p1.title,
       score: betState.p1.targetScore,
-      fate: betState.p1.fate === 'PASS' ? 'ĐẬU CHẮC' : 'RỚT NỮA',
+      betType: betState.p1.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ',
       quote: betState.p1.quote,
-      accentColor: '#00f2fe',
-      isLeft: true
+      accentColor: '#00f2fe'
     });
 
     // VS Circle in middle
@@ -108,10 +108,9 @@ class ProofCardExporter {
       avatar: betState.p2.avatar,
       title: betState.p2.title,
       score: betState.p2.targetScore,
-      fate: betState.p2.fate === 'PASS' ? 'ĐẬU CHẮC' : 'RỚT NỮA',
+      betType: betState.p2.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ',
       quote: betState.p2.quote,
-      accentColor: '#ff2a85',
-      isLeft: false
+      accentColor: '#ff2a85'
     });
 
     // Terms Box (Lower half)
@@ -124,22 +123,22 @@ class ProofCardExporter {
     ctx.textAlign = 'left';
     ctx.fillStyle = '#ffd200';
     ctx.font = 'bold 16px "Chakra Petch", sans-serif';
-    ctx.fillText('⚖️ THỂ LỆ & NGHĨA VỤ CHUNG KÈO:', 90, 495);
+    ctx.fillText('⚖️ ĐIỀU KHOẢN KÈO CHẴN / LẺ & KÈO TỈ SỐ:', 90, 495);
 
     ctx.fillStyle = '#e2e8f0';
     ctx.font = '14px "Outfit", sans-serif';
-    ctx.fillText(`• Kèo Chấp: ${betState.handicapLabel}`, 100, 525);
-    ctx.fillText(`• Kèo Tài/Xỉu Điểm: Mốc ${betState.overUnder} điểm`, 100, 550);
-    ctx.fillText(`• Hình Phạt Kẻ Thua:`, 100, 580);
+    ctx.fillText('• KÈO CHẴN: Thắng khi Cả 2 cùng ĐẬU hoặc Cả 2 cùng RỚT.', 100, 525);
+    ctx.fillText('• KÈO LẺ: Thắng khi Đúng 1 trong 2 người ĐẬU (người kia Rớt).', 100, 550);
+    ctx.fillText(`• KÈO TỈ SỐ: Đoán chuẩn điểm thi (${betState.p1.name}: ${Number(betState.p1.targetScore).toFixed(2)}đ | ${betState.p2.name}: ${Number(betState.p2.targetScore).toFixed(2)}đ)`, 100, 575);
     
     // Highlight penalty
     ctx.fillStyle = '#ff3860';
-    ctx.font = 'bold 16px "Outfit", sans-serif';
-    ctx.fillText(`👉 ${betState.penalty}`, 250, 580);
+    ctx.font = 'bold 15px "Outfit", sans-serif';
+    ctx.fillText(`👉 HÌNH PHẠT CHUNG KÈO: ${betState.penalty}`, 100, 605);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = 'italic 13px "Outfit", sans-serif';
-    ctx.fillText('• Cam kết: Biên bản có giá trị vĩnh viễn, cấm mọi hành vi hủy kèo, viện cớ hoặc bùng kèo!', 100, 620);
+    ctx.font = 'italic 12px "Outfit", sans-serif';
+    ctx.fillText('• Cam kết: Biên bản có giá trị vĩnh viễn, cấm hủy kèo, bùng nợ hoặc trốn tránh khi công bố điểm!', 100, 633);
 
     // Signatures
     ctx.textAlign = 'center';
@@ -158,8 +157,8 @@ class ProofCardExporter {
 
     ctx.fillStyle = '#00f5a0';
     ctx.font = '11px "Outfit", sans-serif';
-    ctx.fillText('✓ ĐÃ XÁC THỰC SỐ PHẬN', 240, 725);
-    ctx.fillText('✓ ĐÃ XÁC THỰC SỐ PHẬN', 960, 725);
+    ctx.fillText('✓ ĐÃ XÁC THỰC KÈO', 240, 725);
+    ctx.fillText('✓ ĐÃ XÁC THỰC KÈO', 960, 725);
 
     // Footer Hash
     ctx.textAlign = 'center';
@@ -171,7 +170,7 @@ class ProofCardExporter {
     this.drawStamp(ctx, 1000, 160, 'ĐÃ CHỐT', 'KÈO CHÍNH THỨC', 'CẤM QUỴT KÈO');
 
     // Trigger Download
-    const filename = `KEO_THI_CU_${betState.p1.name.replace(/\s+/g, '_')}_VS_${betState.p2.name.replace(/\s+/g, '_')}.png`;
+    const filename = `KEO_CHĂN_LE_${betState.p1.name.replace(/\s+/g, '_')}_VS_${betState.p2.name.replace(/\s+/g, '_')}.png`;
     this.triggerDownload(canvas, filename);
   }
 
@@ -199,7 +198,7 @@ class ProofCardExporter {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffd200';
     ctx.font = '900 36px "Chakra Petch", sans-serif';
-    ctx.fillText('🏆 BẢNG VÀNG CÔNG BỐ KẾT QUẢ KÈO THI CỬ', 600, 95);
+    ctx.fillText('🏆 BẢNG VÀNG PHÂN XỬ KÈO THI CỬ', 600, 95);
 
     ctx.fillStyle = '#00f2fe';
     ctx.font = 'bold 18px "Outfit", sans-serif';
@@ -222,9 +221,9 @@ class ProofCardExporter {
 
     // Detailed Breakdown 4 Cards Grid
     const cards = [
-      { title: 'KÈO ĐẬU / RỚT', val: summaryData.fateText, icon: '🎯' },
-      { title: 'KÈO TỈ SỐ & CHẤP', val: summaryData.scoreText, icon: '📊' },
-      { title: 'KÈO TÀI / XỈU TỔNG ĐIỂM', val: summaryData.ouText, icon: '🎲' },
+      { title: 'KẾT QUẢ KÈO CHẴN / LẺ', val: summaryData.evenOddText, icon: '🎲' },
+      { title: `KÈO TỈ SỐ ${betState.p1.name.toUpperCase()}`, val: summaryData.scoreP1Text, icon: '🎯' },
+      { title: `KÈO TỈ SỐ ${betState.p2.name.toUpperCase()}`, val: summaryData.scoreP2Text, icon: '🎯' },
       { title: 'NGHĨA VỤ CHUNG KÈO', val: summaryData.penaltyText, icon: '🍲', isPenalty: true }
     ];
 
@@ -290,13 +289,17 @@ class ProofCardExporter {
     ctx.font = '13px "Outfit", sans-serif';
     ctx.fillText(`Danh hiệu: ${data.title}`, x + 100, y + 90);
 
+    ctx.fillStyle = '#00f5a0';
+    ctx.font = 'bold 13px "Outfit", sans-serif';
+    ctx.fillText(`Kèo Số Phận: ${data.betType}`, x + 30, y + 135);
+
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = '14px "Outfit", sans-serif';
-    ctx.fillText(`Kèo: ${data.fate}  |  Chỉ tiêu: ${data.score} đ`, x + 30, y + 140);
+    ctx.font = '13px "Outfit", sans-serif';
+    ctx.fillText(`Kèo Tỉ Số (Đoán Điểm): ${Number(data.score).toFixed(2)} đ`, x + 30, y + 160);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = 'italic 13px "Outfit", sans-serif';
-    ctx.fillText(`"${data.quote}"`, x + 30, y + 180);
+    ctx.font = 'italic 12px "Outfit", sans-serif';
+    ctx.fillText(`"${data.quote}"`, x + 30, y + 195);
 
     ctx.restore();
   }

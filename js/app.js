@@ -1,6 +1,7 @@
 /**
  * KÈO THI CỬ - APP CONTROLLER
  * Main Application Logic for GitHub Pages Static Site
+ * Updated with KÈO CHẴN / KÈO LẺ / KÈO TỈ SỐ
  */
 
 // Default App State
@@ -12,7 +13,7 @@ let betState = {
     avatar: "🎓",
     title: "Học Bá Bất Diệt",
     sbd: "2026-001",
-    fate: "PASS",
+    betType: "EVEN", // EVEN = Kèo Chẵn (Cùng đậu hoặc cùng rớt) | ODD = Kèo Lẻ (1 người đậu)
     targetScore: 9.00,
     quote: "Tầm này 9+ trong tầm tay, bạn tuổi gì mà so!"
   },
@@ -21,13 +22,10 @@ let betState = {
     avatar: "🚀",
     title: "Thánh Khoanh Lụi",
     sbd: "2026-002",
-    fate: "PASS",
+    betType: "ODD",  // ODD = Kèo Lẻ
     targetScore: 8.75,
     quote: "Khoanh C hết vẫn đủ điểm đè bẹp bạn yêu nhé!"
   },
-  handicap: "0",
-  handicapLabel: "Kèo Đồng Banh (0 - 0)",
-  overUnder: 16.5,
   penalty: "1 Chầu Buffet Nướng Lẩu Full Topping + 1 Ly Trà Sữa Size L",
   createdDate: new Date().toLocaleDateString('vi-VN') + ' - ' + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
   hashTag: "#KEO-THICU-" + Math.floor(1000 + Math.random() * 9000)
@@ -74,7 +72,7 @@ function loadStateFromUrlOrStorage() {
     }
   }
 
-  const saved = localStorage.getItem('EXAM_BET_STATE_2026');
+  const saved = localStorage.getItem('EXAM_BET_STATE_2026_V2');
   if (saved) {
     try {
       betState = { ...betState, ...JSON.parse(saved) };
@@ -86,7 +84,7 @@ function loadStateFromUrlOrStorage() {
 
 // Save state to LocalStorage
 function saveStateToStorage() {
-  localStorage.setItem('EXAM_BET_STATE_2026', JSON.stringify(betState));
+  localStorage.setItem('EXAM_BET_STATE_2026_V2', JSON.stringify(betState));
 }
 
 // Generate shareable link
@@ -97,23 +95,8 @@ function getShareableUrl() {
   return `${baseUrl}#bet=${b64}`;
 }
 
-// Get readable handicap text
-function getHandicapText(code) {
-  switch (code) {
-    case 'P1_05': return `${betState.p1.name} chấp ${betState.p2.name} 0.5 điểm`;
-    case 'P1_10': return `${betState.p1.name} chấp ${betState.p2.name} 1.0 điểm`;
-    case 'P1_15': return `${betState.p1.name} chấp ${betState.p2.name} 1.5 điểm`;
-    case 'P2_05': return `${betState.p2.name} chấp ${betState.p1.name} 0.5 điểm`;
-    case 'P2_10': return `${betState.p2.name} chấp ${betState.p1.name} 1.0 điểm`;
-    case 'P2_15': return `${betState.p2.name} chấp ${betState.p1.name} 1.5 điểm`;
-    default: return 'Kèo Đồng Banh (0 - 0)';
-  }
-}
-
 // Update all UI Components
 function updateUI() {
-  betState.handicapLabel = getHandicapText(betState.handicap);
-
   // 1. Arena View Elements
   document.getElementById('displayExamName').textContent = betState.examName;
 
@@ -125,13 +108,11 @@ function updateUI() {
   document.getElementById('p1TargetScoreDisplay').textContent = Number(betState.p1.targetScore).toFixed(2) + ' đ';
   document.getElementById('p1SbdDisplay').textContent = betState.p1.sbd;
 
-  const p1FateBadge = document.getElementById('p1FateBadge');
-  if (betState.p1.fate === 'PASS') {
-    p1FateBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> ĐẬU CHẮC';
-    p1FateBadge.className = 'stat-value fate-badge';
+  const p1BetTypeDisplay = document.getElementById('p1BetTypeDisplay');
+  if (betState.p1.betType === 'EVEN') {
+    p1BetTypeDisplay.innerHTML = '<span class="badge-even"><i class="fa-solid fa-equals"></i> BẮT CHẴN</span>';
   } else {
-    p1FateBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> RỚT NỮA';
-    p1FateBadge.className = 'stat-value fate-badge fail';
+    p1BetTypeDisplay.innerHTML = '<span class="badge-odd"><i class="fa-solid fa-shuffle"></i> BẮT LẺ</span>';
   }
 
   // Player 2
@@ -142,32 +123,32 @@ function updateUI() {
   document.getElementById('p2TargetScoreDisplay').textContent = Number(betState.p2.targetScore).toFixed(2) + ' đ';
   document.getElementById('p2SbdDisplay').textContent = betState.p2.sbd;
 
-  const p2FateBadge = document.getElementById('p2FateBadge');
-  if (betState.p2.fate === 'PASS') {
-    p2FateBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> ĐẬU CHẮC';
-    p2FateBadge.className = 'stat-value fate-badge';
+  const p2BetTypeDisplay = document.getElementById('p2BetTypeDisplay');
+  if (betState.p2.betType === 'EVEN') {
+    p2BetTypeDisplay.innerHTML = '<span class="badge-even"><i class="fa-solid fa-equals"></i> BẮT CHẴN</span>';
   } else {
-    p2FateBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> RỚT NỮA';
-    p2FateBadge.className = 'stat-value fate-badge fail';
+    p2BetTypeDisplay.innerHTML = '<span class="badge-odd"><i class="fa-solid fa-shuffle"></i> BẮT LẺ</span>';
   }
 
-  // Handicap & Balance Gauge
-  document.getElementById('handicapTextDisplay').textContent = betState.handicapLabel;
-  document.getElementById('overUnderDisplay').textContent = `Tài/Xỉu: ${betState.overUnder} điểm`;
+  // Center Column Matchup Overview
+  const p1PickStr = betState.p1.betType === 'EVEN' ? 'Chẵn' : 'Lẻ';
+  const p2PickStr = betState.p2.betType === 'EVEN' ? 'Chẵn' : 'Lẻ';
+  document.getElementById('p1EvenOddShort').textContent = `${betState.p1.name} Bắt ${p1PickStr}`;
+  document.getElementById('p2EvenOddShort').textContent = `${betState.p2.name} Bắt ${p2PickStr}`;
+
   document.getElementById('gaugeP1Name').textContent = betState.p1.name;
   document.getElementById('gaugeP2Name').textContent = betState.p2.name;
+  document.getElementById('gaugeP1Score').textContent = Number(betState.p1.targetScore).toFixed(2) + ' đ';
+  document.getElementById('gaugeP2Score').textContent = Number(betState.p2.targetScore).toFixed(2) + ' đ';
 
-  // Calculate Power Gauge width based on target scores & handicap
+  // Power Gauge based on predicted scores
   const s1 = parseFloat(betState.p1.targetScore) || 5;
   const s2 = parseFloat(betState.p2.targetScore) || 5;
-  const totalScore = s1 + s2;
-  const p1Percent = totalScore > 0 ? Math.round((s1 / totalScore) * 100) : 50;
-  const p2Percent = 100 - p1Percent;
-
-  document.getElementById('gaugeBarP1').style.width = p1Percent + '%';
-  document.getElementById('gaugeBarP2').style.width = p2Percent + '%';
-  document.getElementById('gaugeP1Percent').textContent = p1Percent + '%';
-  document.getElementById('gaugeP2Percent').textContent = p2Percent + '%';
+  const total = s1 + s2;
+  const p1Width = total > 0 ? Math.round((s1 / total) * 100) : 50;
+  const p2Width = 100 - p1Width;
+  document.getElementById('gaugeBarP1').style.width = p1Width + '%';
+  document.getElementById('gaugeBarP2').style.width = p2Width + '%';
 
   // Stakes
   document.getElementById('stakesDisplay').innerHTML = `<i class="fa-solid fa-utensils"></i> ${betState.penalty}`;
@@ -179,30 +160,28 @@ function updateUI() {
 
   document.getElementById('cParty1Name').textContent = betState.p1.name;
   document.getElementById('cParty1Title').textContent = betState.p1.title;
-  document.getElementById('cParty1Fate').textContent = betState.p1.fate === 'PASS' ? 'ĐẬU CHẮC' : 'RỚT NỮA';
+  document.getElementById('cParty1Fate').textContent = betState.p1.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ';
   document.getElementById('cParty1Score').textContent = Number(betState.p1.targetScore).toFixed(2) + ' đ';
   document.getElementById('cParty1Quote').textContent = betState.p1.quote;
   document.getElementById('cSignA').textContent = betState.p1.name;
 
   document.getElementById('cParty2Name').textContent = betState.p2.name;
   document.getElementById('cParty2Title').textContent = betState.p2.title;
-  document.getElementById('cParty2Fate').textContent = betState.p2.fate === 'PASS' ? 'ĐẬU CHẮC' : 'RỚT NỮA';
+  document.getElementById('cParty2Fate').textContent = betState.p2.betType === 'EVEN' ? 'BẮT KÈO CHẴN' : 'BẮT KÈO LẺ';
   document.getElementById('cParty2Score').textContent = Number(betState.p2.targetScore).toFixed(2) + ' đ';
   document.getElementById('cParty2Quote').textContent = betState.p2.quote;
   document.getElementById('cSignB').textContent = betState.p2.name;
 
-  document.getElementById('cHandicapInfo').textContent = betState.handicapLabel;
-  document.getElementById('cOverUnderInfo').textContent = `${betState.overUnder} điểm`;
   document.getElementById('cPenaltyText').textContent = betState.penalty;
 
   // 3. Result View Inputs hints
   document.getElementById('resP1Avatar').textContent = betState.p1.avatar;
   document.getElementById('resP1Name').textContent = betState.p1.name;
-  document.getElementById('resP1TargetHint').textContent = `${betState.p1.fate === 'PASS' ? 'Đậu' : 'Rớt'} (${Number(betState.p1.targetScore).toFixed(2)} đ)`;
+  document.getElementById('resP1TargetHint').textContent = `Bắt ${p1PickStr} - Đoán: ${Number(betState.p1.targetScore).toFixed(2)} đ`;
 
   document.getElementById('resP2Avatar').textContent = betState.p2.avatar;
   document.getElementById('resP2Name').textContent = betState.p2.name;
-  document.getElementById('resP2TargetHint').textContent = `${betState.p2.fate === 'PASS' ? 'Đậu' : 'Rớt'} (${Number(betState.p2.targetScore).toFixed(2)} đ)`;
+  document.getElementById('resP2TargetHint').textContent = `Bắt ${p2PickStr} - Đoán: ${Number(betState.p2.targetScore).toFixed(2)} đ`;
 }
 
 // Populate Modal Form with State
@@ -214,7 +193,7 @@ function fillModalForm() {
   document.getElementById('inputP1Name').value = betState.p1.name;
   document.getElementById('inputP1Title').value = betState.p1.title;
   document.getElementById('inputP1Sbd').value = betState.p1.sbd;
-  document.getElementById('inputP1Fate').value = betState.p1.fate;
+  document.getElementById('inputP1BetType').value = betState.p1.betType;
   document.getElementById('inputP1TargetScore').value = betState.p1.targetScore;
   document.getElementById('inputP1Quote').value = betState.p1.quote;
 
@@ -222,13 +201,11 @@ function fillModalForm() {
   document.getElementById('inputP2Name').value = betState.p2.name;
   document.getElementById('inputP2Title').value = betState.p2.title;
   document.getElementById('inputP2Sbd').value = betState.p2.sbd;
-  document.getElementById('inputP2Fate').value = betState.p2.fate;
+  document.getElementById('inputP2BetType').value = betState.p2.betType;
   document.getElementById('inputP2TargetScore').value = betState.p2.targetScore;
   document.getElementById('inputP2Quote').value = betState.p2.quote;
 
-  // Handicap & Penalty
-  document.getElementById('inputHandicapType').value = betState.handicap;
-  document.getElementById('inputOverUnder').value = betState.overUnder;
+  // Penalty
   document.getElementById('inputCustomPenalty').value = betState.penalty;
 
   // Select Avatar Chips
@@ -254,7 +231,7 @@ function saveModalForm() {
     avatar: p1Chip ? p1Chip.dataset.val : '🎓',
     title: document.getElementById('inputP1Title').value.trim() || 'Học Bá',
     sbd: document.getElementById('inputP1Sbd').value.trim() || '2026-001',
-    fate: document.getElementById('inputP1Fate').value,
+    betType: document.getElementById('inputP1BetType').value,
     targetScore: parseFloat(document.getElementById('inputP1TargetScore').value) || 8.0,
     quote: document.getElementById('inputP1Quote').value.trim() || 'Tự tin đỗ đầu!'
   };
@@ -264,20 +241,18 @@ function saveModalForm() {
     avatar: p2Chip ? p2Chip.dataset.val : '🚀',
     title: document.getElementById('inputP2Title').value.trim() || 'Chiến Thần',
     sbd: document.getElementById('inputP2Sbd').value.trim() || '2026-002',
-    fate: document.getElementById('inputP2Fate').value,
+    betType: document.getElementById('inputP2BetType').value,
     targetScore: parseFloat(document.getElementById('inputP2TargetScore').value) || 8.0,
     quote: document.getElementById('inputP2Quote').value.trim() || 'Không ngán đối thủ nào!'
   };
 
-  betState.handicap = document.getElementById('inputHandicapType').value;
-  betState.overUnder = parseFloat(document.getElementById('inputOverUnder').value) || 16.0;
   betState.penalty = document.getElementById('inputCustomPenalty').value.trim() || '1 Chầu Ăn Uống Hoành Tráng';
 
   saveStateToStorage();
   updateUI();
   closeModal('betModalOverlay');
   soundEngine.playGavel();
-  showToast('Đã chốt cập nhật kèo thành công! ⚡', 'gold');
+  showToast('Đã chốt kèo Chẵn/Lẻ & Tỉ Số thành công! ⚡', 'gold');
 
   // Trigger stamp animation in contract view
   const stamp = document.getElementById('stampVerified');
@@ -298,43 +273,62 @@ function calculateVerdict() {
   const realP1Score = parseFloat(document.getElementById('resP1ScoreInput').value) || 0;
   const realP2Score = parseFloat(document.getElementById('resP2ScoreInput').value) || 0;
 
-  // 1. Handicap Adjustment
-  let adjP1Score = realP1Score;
-  let adjP2Score = realP2Score;
+  // 1. Determine Actual Even / Odd Outcome
+  // EVEN = Cả 2 cùng PASS (Pass - Pass) hoặc Cả 2 cùng FAIL (Fail - Fail)
+  // ODD = 1 người PASS, 1 người FAIL
+  const isActualEven = (realP1Fate === realP2Fate);
+  const actualOutcomeType = isActualEven ? 'EVEN' : 'ODD';
+  const actualOutcomeLabel = isActualEven 
+    ? `CHẴN (${realP1Fate === 'PASS' ? 'Cả 2 cùng ĐẬU 🎓' : 'Cả 2 cùng RỚT 😭'})`
+    : 'LẺ (1 người Đậu, 1 người Rớt ⚡)';
 
-  if (betState.handicap === 'P1_05') adjP1Score -= 0.5;
-  else if (betState.handicap === 'P1_10') adjP1Score -= 1.0;
-  else if (betState.handicap === 'P1_15') adjP1Score -= 1.5;
-  else if (betState.handicap === 'P2_05') adjP2Score -= 0.5;
-  else if (betState.handicap === 'P2_10') adjP2Score -= 1.0;
-  else if (betState.handicap === 'P2_15') adjP2Score -= 1.5;
+  // Who won the Even/Odd Bet?
+  const p1WonEvenOdd = (betState.p1.betType === actualOutcomeType);
+  const p2WonEvenOdd = (betState.p2.betType === actualOutcomeType);
 
-  // 2. Pass / Fail Evaluation
-  const p1FateSuccess = realP1Fate === betState.p1.fate;
-  const p2FateSuccess = realP2Fate === betState.p2.fate;
+  let evenOddSummaryText = `Kết quả thi ra: ${actualOutcomeLabel}. `;
+  if (p1WonEvenOdd && !p2WonEvenOdd) {
+    evenOddSummaryText += `👉 ${betState.p1.name} THẮNG KÈO SỐ PHẬN!`;
+  } else if (!p1WonEvenOdd && p2WonEvenOdd) {
+    evenOddSummaryText += `👉 ${betState.p2.name} THẮNG KÈO SỐ PHẬN!`;
+  } else if (p1WonEvenOdd && p2WonEvenOdd) {
+    evenOddSummaryText += `👉 Cả 2 cùng bắt đúng ${actualOutcomeLabel}!`;
+  } else {
+    evenOddSummaryText += '👉 Cả 2 cùng bắt sai kèo số phận!';
+  }
 
-  // 3. Points calculation (Pass = +2 points, Higher adjusted score = +3 points)
+  // 2. Score Accuracy Bet (Kèo Tỉ Số)
+  const targetA = parseFloat(betState.p1.targetScore) || 0;
+  const targetB = parseFloat(betState.p2.targetScore) || 0;
+
+  const diffA = Math.abs(realP1Score - targetA);
+  const diffB = Math.abs(realP2Score - targetB);
+
+  const p1Exact = diffA < 0.01;
+  const p2Exact = diffB < 0.01;
+
+  let scoreSummaryP1 = `Đoán: ${targetA.toFixed(2)}đ | Thật: ${realP1Score.toFixed(2)}đ `;
+  scoreSummaryP1 += p1Exact ? '(🎯 CHÍNH XÁC TUYỆT ĐỐI)' : `(Lệch ${diffA.toFixed(2)}đ)`;
+
+  let scoreSummaryP2 = `Đoán: ${targetB.toFixed(2)}đ | Thật: ${realP2Score.toFixed(2)}đ `;
+  scoreSummaryP2 += p2Exact ? '(🎯 CHÍNH XÁC TUYỆT ĐỐI)' : `(Lệch ${diffB.toFixed(2)}đ)`;
+
+  // 3. Points Awarding System
+  // Even/Odd Bet Win: +3 points
+  // Exact Score Match: +3 points, or closer score prediction: +1 point
   let p1Points = 0;
   let p2Points = 0;
 
-  if (p1FateSuccess) p1Points += 2;
-  if (p2FateSuccess) p2Points += 2;
+  if (p1WonEvenOdd) p1Points += 3;
+  if (p2WonEvenOdd) p2Points += 3;
 
-  if (adjP1Score > adjP2Score) p1Points += 3;
-  else if (adjP2Score > adjP1Score) p2Points += 3;
-  else {
-    p1Points += 1;
-    p2Points += 1;
-  }
+  if (p1Exact) p1Points += 3;
+  if (p2Exact) p2Points += 3;
 
-  // 4. Over / Under Evaluation
-  const totalRealScore = realP1Score + realP2Score;
-  const isOver = totalRealScore > betState.overUnder;
-  const ouText = isOver 
-    ? `Tổng: ${totalRealScore.toFixed(2)}đ -> NỔ TÀI (> ${betState.overUnder})`
-    : `Tổng: ${totalRealScore.toFixed(2)}đ -> VỀ XỈU (<= ${betState.overUnder})`;
+  if (diffA < diffB) p1Points += 1;
+  else if (diffB < diffA) p2Points += 1;
 
-  // 5. Determine Overall Winner
+  // 4. Overall Winner & Loser
   let winner = null;
   let loser = null;
   let isTie = false;
@@ -349,14 +343,11 @@ function calculateVerdict() {
     isTie = true;
   }
 
-  // Summary strings
-  const headlineText = isTie ? 'KÈO BẤT PHÂN THẮNG BẠI (HÒA KÈO)!' : `👑 ${winner.toUpperCase()} THẮNG TOÀN DIỆN!`;
+  const headlineText = isTie ? 'KÈO BẤT PHÂN THẮNG BẠI (HÒA KÈO)!' : `👑 ${winner.toUpperCase()} CHIẾN THẮNG TOÀN DIỆN!`;
   const subText = isTie 
-    ? 'Hai bên ngang tài ngang sức, cùng chia sẻ tiền phạt hoặc dắt nhau đi ăn chung!'
+    ? 'Hai bên hòa điểm kèo, cùng vui vẻ chia đôi hóa đơn hoặc đi quẩy chung!'
     : `${loser} đã thua kèo và bắt buộc phải thực hiện nghĩa vụ chung kèo!`;
 
-  const fateSummaryText = `${betState.p1.name}: ${realP1Fate === 'PASS' ? 'ĐẬU ✅' : 'RỚT ❌'} | ${betState.p2.name}: ${realP2Fate === 'PASS' ? 'ĐẬU ✅' : 'RỚT ❌'}`;
-  const scoreSummaryText = `Điểm thực tế: ${realP1Score.toFixed(2)} vs ${realP2Score.toFixed(2)} (Sau chấp: ${adjP1Score.toFixed(2)} vs ${adjP2Score.toFixed(2)})`;
   const penaltySummaryText = isTie 
     ? `Cả 2 cùng cưa đôi hóa đơn: ${betState.penalty}`
     : `${loser} phải bao ngay: ${betState.penalty}`;
@@ -364,24 +355,24 @@ function calculateVerdict() {
   lastOutcomeData = {
     headline: headlineText,
     sub: subText,
-    fateText: fateSummaryText,
-    scoreText: scoreSummaryText,
-    ouText: ouText,
+    evenOddText: evenOddSummaryText,
+    scoreP1Text: scoreSummaryP1,
+    scoreP2Text: scoreSummaryP2,
     penaltyText: penaltySummaryText
   };
 
-  // Populate Outcome Dashboard
+  // Populate Outcome Dashboard in DOM
   const dashboard = document.getElementById('outcomeDashboard');
   dashboard.style.display = 'block';
 
   document.getElementById('verdictHeadline').textContent = headlineText;
   document.getElementById('verdictSub').textContent = subText;
-  document.getElementById('fateResultSummary').textContent = fateSummaryText;
-  document.getElementById('scoreResultSummary').textContent = scoreSummaryText;
-  document.getElementById('overUnderResultSummary').textContent = ouText;
+  document.getElementById('evenOddResultSummary').textContent = evenOddSummaryText;
+  document.getElementById('scoreResultP1Summary').textContent = scoreSummaryP1;
+  document.getElementById('scoreResultP2Summary').textContent = scoreSummaryP2;
 
   if (isTie) {
-    document.getElementById('penaltyClaimSummary').innerHTML = `Cả 2 cùng cưa đôi hóa đơn: <b>${betState.penalty}</b>`;
+    document.getElementById('penaltyClaimSummary').innerHTML = `Cả 2 cùng cưa đôi: <b>${betState.penalty}</b>`;
   } else {
     document.getElementById('penaltyClaimSummary').innerHTML = `<b class="loser-name">${loser}</b> phải chung ngay: <b>${betState.penalty}</b>`;
   }
@@ -497,10 +488,13 @@ function setupEventListeners() {
   // Copy Contract Text
   document.getElementById('copyContractTextBtn').addEventListener('click', () => {
     soundEngine.playClick();
+    const p1Type = betState.p1.betType === 'EVEN' ? 'KÈO CHẴN' : 'KÈO LẺ';
+    const p2Type = betState.p2.betType === 'EVEN' ? 'KÈO CHẴN' : 'KÈO LẺ';
+
     const text = `📜 BIÊN BẢN GIAO KÈO: ${betState.examName}\n` +
-      `👤 Bên A: ${betState.p1.name} (${betState.p1.title}) - Kèo: ${betState.p1.fate} (${betState.p1.targetScore}đ)\n` +
-      `👤 Bên B: ${betState.p2.name} (${betState.p2.title}) - Kèo: ${betState.p2.fate} (${betState.p2.targetScore}đ)\n` +
-      `⚖️ Thể lệ: ${betState.handicapLabel} | Tài/Xỉu: ${betState.overUnder}đ\n` +
+      `👤 Bên A: ${betState.p1.name} (${betState.p1.title}) - Bắt: ${p1Type} - Đoán: ${betState.p1.targetScore}đ\n` +
+      `👤 Bên B: ${betState.p2.name} (${betState.p2.title}) - Bắt: ${p2Type} - Đoán: ${betState.p2.targetScore}đ\n` +
+      `⚖️ Thể lệ: Kèo Chẵn (Cùng Đậu / Cùng Rớt) vs Kèo Lẻ (1 người Đậu) & Kèo Tỉ Số\n` +
       `🍲 Hình phạt: ${betState.penalty}\n` +
       `👉 Xem chi tiết tại: ${getShareableUrl()}`;
     
